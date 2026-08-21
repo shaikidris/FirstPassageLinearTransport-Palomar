@@ -1,0 +1,23 @@
+name = "FirstPassageLinearTransportPalomar"
+version = "0.1.0"
+defaultTargets = ["FirstPassageLinearTransport", "Challenge", "Solution", "Audit"]
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4.git"
+rev = "v4.28.0"
+
+[[lean_lib]]
+name = "FirstPassageLinearTransport"
+
+[[lean_lib]]
+name = "Challenge"
+roots = ["Challenge"]
+
+[[lean_lib]]
+name = "Solution"
+roots = ["Solution"]
+
+[[lean_lib]]
+name = "Audit"
+roots = ["Audit"]

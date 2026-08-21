@@ -1,0 +1,156 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
+version: "v0.4"
+
+project:
+  name: "Polylogarithmic Collatz Descent in Natural Density"
+  description: >-
+    A Lean 4 formalization of fixed-exponent polylogarithmic descent for almost
+    all shortcut Collatz orbits in ordinary natural density. For every exponent
+    above an explicit entropy threshold, every clock coefficient above the
+    drift threshold, every positive height allowance, and every exceptional
+    exponent strictly below the explicit entropy margin, the theorem produces
+    a density-one same-witness landing, logarithmic clock, orbit ceiling, and
+    the corresponding quantitative power-logarithmic exceptional-count bound.
+  authors:
+    - "Idris Ali Shaik (ORCID 0009-0009-9699-9712)"
+  license: "Apache-2.0"
+  responsible_maintainers:
+    - "Idris Ali Shaik (ORCID 0009-0009-9699-9712)"
+
+classification:
+  arxiv: ["math.NT", "math.LO"]
+  msc2020: ["11B83", "37P99", "03B35"]
+
+sources:
+  - title: "Polylogarithmic Descent for Almost All Collatz Orbits in Natural Density"
+    authors:
+      - "Idris Ali Shaik"
+    id: "doi:10.5281/zenodo.21984038"
+    type: "paper"
+    location: "https://doi.org/10.5281/zenodo.21984038"
+    relationship: "formalizes"
+    note: >-
+      The submitted declaration is exactly Corollary 1.2(1): for every
+      0 < gamma < kappa_*(A - A_FP), it gives a polylogarithmic landing,
+      logarithmic shortcut clock, same-witness orbit ceiling, and an
+      O(X (log X)^(-gamma)) exceptional count with separate landing and
+      exceptional constants. The preprint proof is self-contained; this
+      package supplies supplementary kernel verification of that theorem chain.
+    license: "CC-BY-4.0"
+    author_endorsement: "participated"
+  - title: "Lean 4 Formalization: Polylogarithmic Descent for Almost All Collatz Orbits in Natural Density"
+    authors:
+      - "Idris Ali Shaik"
+    id: "doi:10.5281/zenodo.21930432"
+    type: "other"
+    location: "https://doi.org/10.5281/zenodo.21930432"
+    relationship: "other"
+    note: >-
+      Archived frozen source release from which the exact dependency cone was
+      extracted; tag lean-v3.2.0, commit
+      ef3410843bf58d69f771f5ba2c0571d54b54da59.
+    license: "Apache-2.0"
+    author_endorsement: "participated"
+
+related_formalizations:
+  - id: "https://github.com/shaikidris/FirstPassageLinearTransport/tree/ef3410843bf58d69f771f5ba2c0571d54b54da59"
+    relationship: "builds-on"
+    note: >-
+      Public frozen Lean 4.15.0 development supplying the clean, self-contained
+      58-module proof cone. The Palomar package adds the literal paper-strength
+      Corollary 1.2(1) wrapper and ports the resulting 59 modules to Lean 4.28.0.
+
+status:
+  scope: >-
+    The formalization proves the fixed-exponent theorem advertised in
+    Challenge.lean: for every A above the explicit first-passage entropy
+    threshold, c above 2/log(4/3), beta > 0, and every
+    0 < gamma < kappa_*(A - A_FP), it gives separate positive landing and
+    exceptional constants, a natural-density-one same-witness
+    landing/clock/ceiling set, and the stated eventual
+    O(X (log X)^(-gamma)) exceptional-count estimate. It does not include the
+    manuscript's critical log-log endpoint, arbitrary moving endpoint,
+    stretched-logarithmic companion, unaccelerated-map clock conversion, or
+    any pointwise Collatz assertion. It does not exclude exceptional cycles or
+    divergent orbits.
+  sorry_count: 0
+  sorry_in_definitions: 0
+  axioms: ["propext", "Classical.choice", "Quot.sound"]
+  main_results:
+    - declaration: "CollatzFirstPassage.polylogarithmic_natural_density_descent"
+      file: "Solution.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator.json"
+      literature_dependencies: []
+
+automation:
+  methods:
+    - method: "agent"
+      models: ["OpenAI Codex (GPT-5.6)"]
+      framework: "Codex with author-supplied mathematical research and release harnesses"
+      tool_setup: >-
+        AI-assisted Lean proof construction, compiler-guided
+        diagnostics, dependency-cone extraction, toolchain migration, statement
+        alignment, axiom auditing, and submission-package preparation. Lean's
+        kernel is the final checker for the formal proof.
+      cost:
+        wall_time: "multi-session research and formalization effort; not separately tracked"
+        spend_usd: "subscription-based; not separately tracked"
+        hardware: "local macOS workstation plus hosted Codex service"
+      prompting_notes: >-
+        The author supplied the research objective, proof constraints,
+        mathematical-paper protocol, theorem-audit protocol, and detailed test
+        harness. Iterative prompts asked Codex to test proof architectures,
+        formalize the selected chain,
+        diagnose elaboration failures, and verify the public theorem surface.
+        The author evaluated the architecture and outputs and made all
+        mathematical and release decisions.
+  spend_usd: "subscription-based; not separately tracked"
+  notes: >-
+    OpenAI Codex contributed to the proof validation and Lean
+    development. Idris Ali Shaik directed the work through explicit objectives,
+    constraints, protocols, and audits, and accepts responsibility for all
+    claims. Other generative-AI tools were used only for exposition or minor
+    review and did not contribute to the formalized proof argument.
+
+fidelity:
+  divergences: >-
+    No mathematical divergence is known in the advertised fixed-exponent
+    theorem. Its statement matches preprint Corollary 1.2(1), including the
+    complete strict gamma range and separate Ctar/Cexc constants, and is
+    exposed through definitionally equivalent Challenge/Solution namespaces.
+    The frozen proof cone and the exact-rate wrapper were checked on Lean
+    4.15.0 and ported to Lean 4.28.0 using import-path, parser, elaboration, and
+    tactic-compatibility edits only. Material outside the exact theorem
+    dependency cone was intentionally omitted.
+
+review:
+  status: "self-assessed"
+  reviewers: []
+  notes: >-
+    The author and Codex audited the statement against preprint Corollary
+    1.2(1), built the complete transitive proof cone, checked for admitted
+    obligations and project-specific axioms, and completed a fresh Linux
+    Comparator/Landrun/NanoDa replay. No independent human peer review or
+    Palomar acceptance is claimed.
+
+alignment:
+  namespace: "CollatzFirstPassage"
+  statements:
+    - source: >-
+        Preprint Corollary 1.2(1); Lean declaration
+        FirstPassageLinearTransport.paper_cor12_item1_fixed_polylog
+      lean: "CollatzFirstPassage.polylogarithmic_natural_density_descent"
+      module: "Solution"
+      status: "proved"
+      note: >-
+        Same hypotheses and conclusions, including every strict exceptional
+        exponent below kappa_*(A - A_FP) and separate landing and exceptional
+        constants, with only namespace-local, definitionally equal names for
+        the shortcut map, orbit, bad count, natural density one, logarithmic
+        ratio, binary entropy, kappa_*, and A_FP.
+
+acknowledgements: >-
+  Built with Lean 4 and Mathlib. OpenAI Codex materially assisted as disclosed
+  under automation; Idris Ali Shaik is responsible for the mathematical content.

@@ -25,9 +25,9 @@ sources:
   - title: "Polylogarithmic Descent for Almost All Collatz Orbits in Natural Density"
     authors:
       - "Idris Ali Shaik"
-    id: "doi:10.5281/zenodo.21984038"
+    id: "doi:10.2139/ssrn.7290240"
     type: "paper"
-    location: "https://doi.org/10.5281/zenodo.21984038"
+    location: "https://doi.org/10.2139/ssrn.7290240"
     relationship: "formalizes"
     note: >-
       The submitted declaration is exactly Corollary 1.2(1): for every
@@ -36,6 +36,19 @@ sources:
       O(X (log X)^(-gamma)) exceptional count with separate landing and
       exceptional constants. The preprint proof is self-contained; this
       package supplies supplementary kernel verification of that theorem chain.
+    license: "CC-BY-4.0"
+    author_endorsement: "participated"
+  - title: "Polylogarithmic Descent for Almost All Collatz Orbits in Natural Density"
+    authors:
+      - "Idris Ali Shaik"
+    id: "doi:10.5281/zenodo.21984038"
+    type: "paper"
+    location: "https://doi.org/10.5281/zenodo.21984038"
+    relationship: "other"
+    note: >-
+      Versioned manuscript archive for the same preprint, retained as the
+      immutable full-text record corresponding to Version 3.2.3. The SSRN DOI
+      is the primary public discovery and citation record.
     license: "CC-BY-4.0"
     author_endorsement: "participated"
   - title: "Lean 4 Formalization: Polylogarithmic Descent for Almost All Collatz Orbits in Natural Density"

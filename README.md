@@ -3,7 +3,10 @@
 This repository is the self-contained Palomar submission package for one
 principal theorem from Idris Ali Shaik's preprint
 [*Polylogarithmic Descent for Almost All Collatz Orbits in Natural
-Density*](https://doi.org/10.5281/zenodo.21984038).
+Density*](https://doi.org/10.2139/ssrn.7290240). The primary public preprint
+record is [SSRN Paper 7290240](https://www.ssrn.com/abstract=7290240); the
+versioned manuscript archive is
+[Zenodo Version 3.2.3](https://doi.org/10.5281/zenodo.21984038).
 
 For the shortcut Collatz map, the formalized theorem says that for every fixed
 polylogarithmic exponent

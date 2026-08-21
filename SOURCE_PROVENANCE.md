@@ -8,6 +8,21 @@ were derived from the official
 `128a6c5ce5f48622e69927ccd639cbff401022e8`. The toy theorem and every template
 metadata value were removed.
 
+## Paper records
+
+The formalized theorem is Corollary 1.2(1) of
+[*Polylogarithmic Descent for Almost All Collatz Orbits in Natural
+Density*](https://doi.org/10.2139/ssrn.7290240). Its public records have
+distinct roles:
+
+- primary preprint and citation record: SSRN Paper `7290240`,
+  <https://doi.org/10.2139/ssrn.7290240>;
+- versioned manuscript archive: Zenodo Version `3.2.3`,
+  <https://doi.org/10.5281/zenodo.21984038>.
+
+The Zenodo manuscript record is retained as an immutable versioned archive;
+it is not used in place of the primary SSRN discovery record.
+
 ## Frozen source
 
 The formal proof in this repository was extracted from the public release:

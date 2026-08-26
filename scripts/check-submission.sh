@@ -16,8 +16,8 @@ if [ -n "$unexpected" ]; then
 fi
 
 challenge_sorries=$(rg -o '\bsorry\b' Challenge.lean | wc -l | tr -d ' ')
-if [ "$challenge_sorries" != "1" ]; then
-  echo "error: Challenge.lean must contain exactly one deliberate sorry" >&2
+if [ "$challenge_sorries" != "4" ]; then
+  echo "error: Challenge.lean must contain exactly four deliberate sorries" >&2
   exit 1
 fi
 

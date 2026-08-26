@@ -2,7 +2,7 @@
 version: "v0.4"
 
 project:
-  name: "Polylogarithmic Collatz Descent in Natural Density"
+  name: "Polylogarithmic Descent for Almost All Collatz Orbits in Natural Density"
   description: >-
     A Lean 4 formalization of fixed-exponent polylogarithmic descent for almost
     all shortcut Collatz orbits in ordinary natural density. For every exponent

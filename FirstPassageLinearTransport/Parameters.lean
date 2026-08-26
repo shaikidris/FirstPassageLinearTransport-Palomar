@@ -44,7 +44,7 @@ theorem eventually_horizon_small {r : ℝ} (hr : 0 < r) :
       Filter.Tendsto
         (fun M : ℕ => (M : ℝ) * Real.exp (-b * M))
         Filter.atTop (nhds 0) := by
-    simpa [Real.rpow_one] using
+    simpa [Real.rpow_one, Function.comp_def] using
       htReal.comp tendsto_natCast_atTop_atTop
   have hevent : ∀ᶠ M : ℕ in Filter.atTop,
       (M : ℝ) * Real.exp (-b * M) < 1 / 3 :=
@@ -72,10 +72,14 @@ theorem eventually_horizon_small {r : ℝ} (hr : 0 < r) :
         mul_le_mul_of_nonneg_left hfloor (by positivity)
       _ = (M : ℝ) * Real.exp (-(b * M)) := by
         dsimp [b]
-        ring_nf
+        have hexp :
+            -(r * 1 * (M : ℝ) * Real.log 2) =
+              -(r * Real.log 2 * (M : ℝ)) := by
+          ring
+        rw [hexp]
+        ring
   have hM' : (M : ℝ) * Real.exp (-(b * M)) ≤ 1 / 3 := by
-    convert hM.le using 1
-    all_goals ring
+    simpa only [neg_mul] using hM.le
   exact hcalc.trans hM'
 
 /-- Existence of the exact one-stage parameter package used by the pullback

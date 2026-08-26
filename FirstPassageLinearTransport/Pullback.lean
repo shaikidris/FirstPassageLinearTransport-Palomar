@@ -747,7 +747,7 @@ theorem firstPassagePullback_powerDense
         (by linarith [hS.C_pos]))
       (sq_pos_of_pos (inv_pos.mpr hD0))).le
   have hdiv := div_le_div_of_nonneg_left hnum hdenDc hden
-  convert hdiv using 1 <;> ring
+  simpa [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm] using hdiv
 
 end
 

@@ -1,7 +1,12 @@
 {
   "challenge_module": "Challenge",
   "solution_module": "Solution",
-  "theorem_names": ["CollatzFirstPassage.polylogarithmic_natural_density_descent"],
+  "theorem_names": [
+    "CollatzFirstPassage.moving_polylogarithmic_natural_density_descent",
+    "CollatzFirstPassage.polylogarithmic_natural_density_descent",
+    "CollatzFirstPassage.stretched_logarithmic_descent_with_orbit_ceiling",
+    "CollatzFirstPassage.stretched_logarithmic_quantitative_exceptional_count"
+  ],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
   "enable_nanoda": true

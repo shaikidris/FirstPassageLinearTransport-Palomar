@@ -1,4 +1,4 @@
-# Polylogarithmic Collatz Descent in Natural Density — Lean 4
+# Polylogarithmic Descent for Almost All Collatz Orbits in Natural Density — Lean 4
 
 This repository is the self-contained Palomar submission package for one
 principal theorem from Idris Ali Shaik's preprint

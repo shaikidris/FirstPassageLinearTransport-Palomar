@@ -9,7 +9,7 @@ lean4export_dir="$cache_root/lean4export"
 nanoda_dir="$cache_root/nanoda"
 
 comparator_commit=68a064109f01c08f47c8edc9f51d6a2bbffaa188
-lean4export_commit=d065b0009aed0520e9e99752847a33b337661690
+lean4export_commit=15f6055e299ad5b89345e533cc2192f4cc00f659
 landrun_commit=811cfff51ceaf3d9843708aa6d22e9b84ccac8b4
 nanoda_commit=68d5ca9db226849b41a6fff59d796ff19d0a8840
 

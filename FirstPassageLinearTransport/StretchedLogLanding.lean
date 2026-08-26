@@ -162,8 +162,8 @@ theorem eventuallyShellLanding
   have hstartup : (R : ℝ) * Real.log (stageK p) ≤
       A * Real.log x := by
     dsimp [R, A, x]
-    convert mul_le_mul_of_nonneg_right hRle hlogK0 using 1
-    all_goals ring
+    simpa [mul_assoc, mul_left_comm, mul_comm] using
+      mul_le_mul_of_nonneg_right hRle hlogK0
   have hrpow := stageCountRpowUpper (omega := omega)
     p.r_pos p.r_lt_one M
   have hlogn0 : 0 ≤ Real.log n := Real.log_nonneg (by exact_mod_cast hn)

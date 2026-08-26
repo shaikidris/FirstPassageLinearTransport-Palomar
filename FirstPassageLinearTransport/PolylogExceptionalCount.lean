@@ -349,7 +349,7 @@ theorem eventually_halfNatLog_profile_le_natLog
   have hqx : Real.log N / q ≤ x := (div_le_iff₀ hq).2 (by
     simpa [mul_comm] using hlogx)
   have hmono : x ^ (-kappa) ≤ (Real.log N / q) ^ (-kappa) :=
-    Real.rpow_le_rpow_of_exponent_nonpos
+    Real.rpow_le_rpow_of_nonpos
       (div_pos hlogN hq) hqx (neg_nonpos.mpr hkappa)
   have hrewrite :
       (Real.log N / q) ^ (-kappa) =

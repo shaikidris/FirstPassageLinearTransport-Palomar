@@ -41,7 +41,7 @@ theorem eventually_rankTransport_small
       Tendsto
         (fun q : ℕ => (q : ℝ) * Real.exp (-(Real.log 2) * (q : ℝ)))
         atTop (nhds 0) := by
-    simpa [Real.rpow_one] using
+    simpa [Real.rpow_one, Function.comp_def] using
       htReal.comp tendsto_natCast_atTop_atTop
   have hsmall : ∀ᶠ q : ℕ in atTop,
       (q : ℝ) * Real.exp (-(Real.log 2) * (q : ℝ)) < rR / 9 :=

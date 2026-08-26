@@ -58,8 +58,7 @@ an orbit after the selected witness.
 
 ## Reproduce the checks
 
-The project uses Lean `v4.28.0`, the minimum stable version accepted by Palomar
-when this package was prepared, and a committed Lake manifest.
+The project uses Lean `v4.33.0` and a committed Lake manifest.
 
 ```bash
 lake exe cache get
@@ -101,12 +100,12 @@ The proof cone was extracted from the public frozen release
 [`lean-v3.2.0`](https://github.com/shaikidris/FirstPassageLinearTransport/tree/lean-v3.2.0)
 at commit `ef3410843bf58d69f771f5ba2c0571d54b54da59`. The exact-rate Corollary
 1.2(1) wrapper was then assembled from that proved cone, checked on Lean
-4.15.0, and ported to Lean 4.28.0 without changing its hypotheses or
+4.15.0, and ported to Lean 4.33.0 without changing its hypotheses or
 conclusions.
 The archived source release is
 [Zenodo DOI 10.5281/zenodo.21930432](https://doi.org/10.5281/zenodo.21930432).
 
-OpenAI Codex materially assisted with proof exploration, Lean proof
+OpenAI Codex assisted with Lean proof
 construction, diagnostics, dependency-cone extraction, the preservation port,
 and documentation. Idris Ali Shaik supplied the research direction,
 mathematical constraints, protocol and audit harnesses, evaluated the proof

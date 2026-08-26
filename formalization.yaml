@@ -71,7 +71,7 @@ related_formalizations:
     note: >-
       Public frozen Lean 4.15.0 development supplying the clean, self-contained
       58-module proof cone. The Palomar package adds the literal paper-strength
-      Corollary 1.2(1) wrapper and ports the resulting 59 modules to Lean 4.28.0.
+      Corollary 1.2(1) wrapper and ports the resulting 59 modules to Lean 4.33.0.
 
 status:
   scope: >-
@@ -134,7 +134,7 @@ fidelity:
     complete strict gamma range and separate Ctar/Cexc constants, and is
     exposed through definitionally equivalent Challenge/Solution namespaces.
     The frozen proof cone and the exact-rate wrapper were checked on Lean
-    4.15.0 and ported to Lean 4.28.0 using import-path, parser, elaboration, and
+    4.15.0 and ported to Lean 4.33.0 using import-path, parser, elaboration, and
     tactic-compatibility edits only. Material outside the exact theorem
     dependency cone was intentionally omitted.
 

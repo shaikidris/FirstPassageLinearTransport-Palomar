@@ -61,10 +61,10 @@ the original Lean 4.15.0/Mathlib pins. Its public theorem was axiom-audited
 before the Palomar port and reported only `propext`, `Classical.choice`, and
 `Quot.sound`.
 
-## Port to Palomar's supported toolchain
+## Port to the Palomar package toolchain
 
-Palomar requires Lean 4.28.0 or later. This package uses the preservation-first
-choice Lean `v4.28.0` and the exact Mathlib revision in `lake-manifest.json`.
+This package uses Lean `v4.33.0` and the exact Mathlib revision in
+`lake-manifest.json`.
 The migration changed no advertised hypotheses or conclusions. Compatibility
 edits in the frozen dependency cone were limited to:
 
@@ -79,10 +79,10 @@ edits in the frozen dependency cone were limited to:
 - removal of tactic calls that became redundant after stronger simplification;
 - replacement of renamed library lemmas by their direct successors.
 
-For the exact-rate wrapper itself, the Lean 4.28 port needed only one algebraic
-step removed after stronger simplification and one explicit ordered-addition
-proof. `Solution.lean` proves the auditable `Challenge.lean` declaration by
-definitional reduction to
+For the exact-rate wrapper itself, the Lean 4.33 port uses an explicit equality
+between the Challenge-local shortcut orbit and the identically defined proof
+library orbit. `Solution.lean` proves the auditable `Challenge.lean` declaration
+by reduction to
 `FirstPassageLinearTransport.paper_cor12_item1_fixed_polylog`.
 
 ## Verification boundary

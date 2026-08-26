@@ -132,15 +132,16 @@ theorem tendsto_endpointLambda :
     tendsto_atTop_add_const_right atTop (2 : ℝ)
       tendsto_natCast_atTop_atTop
   have hinv : Tendsto (fun n : ℕ => 1 / ((n : ℝ) + 2)) atTop (nhds 0) := by
-    simpa [one_div] using tendsto_inv_atTop_zero.comp hden
+    simpa [one_div, Function.comp_def] using tendsto_inv_atTop_zero.comp hden
   change Tendsto (fun n : ℕ => 1 - 1 / ((n : ℝ) + 2)) atTop (nhds 1)
   simpa using
     ((tendsto_const_nhds : Tendsto (fun _ : ℕ => (1 : ℝ)) atTop (nhds 1)).sub hinv)
 
 theorem tendsto_endpointTolerance :
     Tendsto endpointTolerance atTop (nhds driftGap) := by
-  simpa [endpointTolerance] using
-    tendsto_const_nhds.mul tendsto_endpointLambda
+  change Tendsto (fun n : ℕ => driftGap * endpointLambda n)
+    atTop (nhds driftGap)
+  simpa using tendsto_const_nhds.mul tendsto_endpointLambda
 
 theorem tendsto_endpointEntropyRate :
     Tendsto

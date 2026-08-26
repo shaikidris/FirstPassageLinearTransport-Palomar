@@ -75,12 +75,18 @@ theorem polylogarithmic_natural_density_descent
       binaryEntropyBaseTwo, logThreeTwo,
       FirstPassageLinearTransport.binaryEntropyBaseTwo,
       FirstPassageLinearTransport.logThreeTwo] using hgamma_lt
+  have hshortcut : shortcut = FirstPassageLinearTransport.shortcut := by
+    funext n
+    rfl
+  have horbit : orbit = FirstPassageLinearTransport.orbit := by
+    funext k n
+    simp only [orbit, FirstPassageLinearTransport.orbit, hshortcut]
+  rw [horbit]
   simpa only [binaryEntropyBaseTwo, logThreeTwo, NaturalDensityOne, badCount,
-    orbit, shortcut, FirstPassageLinearTransport.binaryEntropyBaseTwo,
+    FirstPassageLinearTransport.binaryEntropyBaseTwo,
     FirstPassageLinearTransport.logThreeTwo,
     FirstPassageLinearTransport.NaturalDensityOne,
-    FirstPassageLinearTransport.badCount, FirstPassageLinearTransport.orbit,
-    FirstPassageLinearTransport.shortcut] using
+    FirstPassageLinearTransport.badCount] using
     FirstPassageLinearTransport.paper_cor12_item1_fixed_polylog
       hA' hc hbeta hgamma hgamma_lt'
 

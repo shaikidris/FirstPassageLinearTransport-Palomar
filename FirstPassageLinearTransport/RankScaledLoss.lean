@@ -74,7 +74,7 @@ theorem rankScaledBudget_step
     _ ≤ ((((q + 3 : ℕ) : ℚ) / 2) / r) +
           ((q + 1 : ℕ) : ℚ) / (2 * r) := by
       apply add_le_add
-      · convert hweightR using 1 <;> ring
+      · simpa [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm] using hweightR
       · rfl
     _ = ((q + 2 : ℕ) : ℚ) / r := by
       field_simp [ne_of_gt hr]
@@ -116,7 +116,7 @@ theorem scaledReverseLoss_rank_step
       _ ≤ ((q + 1 : ℕ) : ℚ) / (2 * r) := by
         have hhalf := mul_le_mul_of_nonneg_left hm
           (by norm_num : (0 : ℚ) ≤ 1 / 2)
-        convert hhalf using 1 <;> ring
+        simpa [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm] using hhalf
   rw [hadd, hratio]
   exact rankScaledBudget_step hr hprevious hlocal
 
@@ -170,8 +170,7 @@ theorem CertifiedRankChain.scaledReverseLoss_le
             have hq0 : (0 : ℚ) ≤ q := by positivity
             linarith
           have hqR := (div_le_div_iff_of_pos_right hr).2 hq
-          convert hqR using 1
-          ring
+          simpa [div_eq_mul_inv, mul_assoc, mul_left_comm, mul_comm] using hqR
   | @next t qprev q m h hchain hgap hfp hhm hm ih =>
       let d : ℕ := qprev - q - 1
       have hqprev : qprev = q + d + 1 := by

@@ -91,8 +91,13 @@ theorem barrierHitCount_succ_of_safe {a : ℝ} {r : ℕ} {y : ℤ}
             {w : Fin r → Bool //
               hitsBarrierFrom a r (y + boolWalkStep b) w}) :=
     Fintype.card_congr (safeHitSuccEquiv (r := r) hy)
-  simpa [barrierHitCount, Fintype.card_subtype, Fintype.card_sigma,
-    Fintype.sum_bool, sub_eq_add_neg, add_comm] using hc
+  rw [Fintype.card_sigma, Fintype.sum_bool] at hc
+  have hcard (s : ℕ) (z : ℤ) :
+      Fintype.card {v : Fin s → Bool // hitsBarrierFrom a s z v} =
+        barrierHitCount a s z := by
+    rw [barrierHitCount, Fintype.card_subtype]
+  rw [hcard, hcard, hcard] at hc
+  simpa [sub_eq_add_neg, add_comm] using hc
 
 theorem cosh_int_children (θ : ℝ) (y : ℤ) :
     Real.cosh (θ * ((y - 1 : ℤ) : ℝ)) +

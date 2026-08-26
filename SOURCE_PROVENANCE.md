@@ -10,7 +10,10 @@ metadata value were removed.
 
 ## Paper records
 
-The formalized theorem is Corollary 1.2(1) of
+The four advertised declarations correspond to the manuscript's general
+moving-endpoint theorem, Corollary 1.2(1), a qualitative same-witness
+projection of its stretched-logarithmic companion, and the separately proved
+strict-exponent stretched-logarithmic exceptional count in
 [*Polylogarithmic Descent for Almost All Collatz Orbits in Natural
 Density*](https://doi.org/10.2139/ssrn.7290240). Its public records have
 distinct roles:
@@ -39,10 +42,11 @@ The formal proof in this repository was extracted from the public release:
 - original pinned Mathlib commit:
   `9837ca9d65d9de6fad1ef4381750ca688774e608`
 
-The source tag was first built and axiom-audited before extraction. The isolated
-root was `FirstPassageLinearTransport.ShrinkingNaturalDensityDescent`. Its
-source dependency cone contains 58 modules. Legacy, alternate, companion, and
-unrelated roots were not copied.
+The source tag was first built and axiom-audited before extraction. The
+dependency-cone union for the moving-endpoint producer, the fixed-exponent
+specialization, the stretched same-witness companion, and the strict-exponent
+stretched exceptional count contains 82 frozen modules. Legacy, alternate,
+raw-map, critical-specialization, and unrelated roots were not copied.
 
 ## Exact paper-strength theorem wrapper
 
@@ -51,8 +55,8 @@ specialization corresponding to preprint Corollary 1.2(1). It selects every
 exceptional exponent
 `0 < gamma < kappa_* (A - A_FP)`, keeps separate landing and exceptional
 constants, and absorbs the finite startup without reducing the chosen
-exceptional exponent. Together with the 58-module cone, this makes 59 project
-modules in the submission package.
+exceptional exponent. Together with the 82-module frozen cone union, this
+makes 83 project modules in the expanded submission package.
 
 This wrapper was not present in the frozen `lean-v3.2.0` release and this file
 does not claim otherwise. It was assembled from the already-proved shrinking
@@ -73,30 +77,36 @@ edits in the frozen dependency cone were limited to:
   imports, including explicit imports for declarations that the old umbrella
   supplied transitively;
 - current scoped notation for finite sums and products;
+- the equivalent current natural-floor notation in place of the old
+  `Int.toNat`-of-integer-floor spelling;
 - explicit namespace qualification for moved lemmas;
 - explicit cast, addition-order, and square-root normalization where the newer
   elaborator no longer inferred the old proof term;
 - removal of tactic calls that became redundant after stronger simplification;
 - replacement of renamed library lemmas by their direct successors.
 
-For the exact-rate wrapper itself, the Lean 4.33 port uses an explicit equality
+For the public statement surface, the Lean 4.33 port uses explicit equalities
 between the Challenge-local shortcut orbit and the identically defined proof
-library orbit. `Solution.lean` proves the auditable `Challenge.lean` declaration
-by reduction to
-`FirstPassageLinearTransport.paper_cor12_item1_fixed_polylog`.
+library orbit. `Solution.lean` proves its four auditable declarations by
+reduction to
+`FirstPassageLinearTransport.timeoutEndpointLiteralNaturalDensityDescent`,
+`FirstPassageLinearTransport.paper_cor12_item1_fixed_polylog`,
+`FirstPassageLinearTransport.firstPassageLinearTransportOrbitCeiling`, and
+`FirstPassageLinearTransport.firstPassageLinearTransportQuantitativeStretched`.
 
 ## Verification boundary
 
 The proof development outside `Challenge.lean` contains no `sorry`, `admit`, or
-project-specific `axiom`. `Challenge.lean` contains one deliberate `sorry` in
-the statement-only surface required by the Comparator workflow. `Audit.lean`
-reports only `propext`, `Classical.choice`, and `Quot.sound`.
+project-specific `axiom`. `Challenge.lean` contains four deliberate `sorry`s
+in the statement-only surface required by the Comparator workflow.
+`Audit.lean` reports only `propext`, `Classical.choice`, and `Quot.sound` for
+each advertised declaration.
 
-The strengthened package was also replayed from a fresh copy on Linux with the
-pinned Comparator, `lean4export`, Landrun, and NanoDa revisions in
-`scripts/verify-comparator.sh`. Comparator exported the declaration from both
-`Challenge.lean` and `Solution.lean`; NanoDa and Lean's default kernel accepted
-the solution.
+The registered version-1 fixed theorem was replayed from a fresh copy on Linux
+with the pinned Comparator, `lean4export`, Landrun, and NanoDa revisions in
+`scripts/verify-comparator.sh`. The expanded four-declaration version requires
+a fresh independent replay before registration; no result from the version-1
+run is silently carried over to the three newly advertised declarations.
 
 This provenance record does not claim that Palomar has reviewed or accepted the
 submission, nor that kernel checking establishes the informal manuscript's

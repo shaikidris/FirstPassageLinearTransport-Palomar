@@ -4,13 +4,14 @@ version: "v0.4"
 project:
   name: "Polylogarithmic Descent for Almost All Collatz Orbits in Natural Density"
   description: >-
-    A Lean 4 formalization of fixed-exponent polylogarithmic descent for almost
-    all shortcut Collatz orbits in ordinary natural density. For every exponent
-    above an explicit entropy threshold, every clock coefficient above the
-    drift threshold, every positive height allowance, and every exceptional
-    exponent strictly below the explicit entropy margin, the theorem produces
-    a density-one same-witness landing, logarithmic clock, orbit ceiling, and
-    the corresponding quantitative power-logarithmic exceptional-count bound.
+    A Lean 4 formalization of four almost-all descent results for shortcut
+    Collatz orbits in ordinary natural density: a general moving-endpoint
+    first-passage theorem with a quantitative dyadic-shell error profile; the
+    fixed-exponent polylogarithmic specialization with the full explicit
+    entropy-margin exceptional-rate range; a stretched-logarithmic
+    same-witness companion with a 6.953 log n clock and orbit ceiling; and a
+    quantitative stretched-logarithmic exceptional count retaining every
+    strict exponent sigma < 1 - delta.
   authors:
     - "Idris Ali Shaik (ORCID 0009-0009-9699-9712)"
   license: "Apache-2.0"
@@ -30,12 +31,21 @@ sources:
     location: "https://doi.org/10.2139/ssrn.7290240"
     relationship: "formalizes"
     note: >-
-      The submitted declaration is exactly Corollary 1.2(1): for every
-      0 < gamma < kappa_*(A - A_FP), it gives a polylogarithmic landing,
-      logarithmic shortcut clock, same-witness orbit ceiling, and an
-      O(X (log X)^(-gamma)) exceptional count with separate landing and
-      exceptional constants. The preprint proof is self-contained; this
-      package supplies supplementary kernel verification of that theorem chain.
+      The submitted declarations cover the manuscript's general moving-endpoint
+      producer (Theorem 1.1), exactly Corollary 1.2(1), a qualitative
+      same-witness projection of the stretched-logarithmic companion theorem,
+      and its separately formalized strict-exponent exceptional count.
+      Corollary 1.2(1) retains every
+      0 < gamma < kappa_*(A - A_FP), separate landing and exceptional
+      constants, the logarithmic shortcut clock, and the orbit ceiling. The
+      same-witness stretched declaration retains every 0 < delta < 1 and
+      beta > 0 but uses the formal theorem's fixed 6.953 clock. The separate
+      quantitative declaration proves the unclocked landing count
+      5 X exp(-rate (log X)^sigma) for every 0 < sigma < 1 - delta. It does
+      not assert the endpoint sigma = 1 - delta or combine this count with
+      every clock c > 2/log(4/3) and the same-witness ceiling. The manuscript
+      proof is self-contained; this package supplies supplementary kernel
+      verification.
     license: "CC-BY-4.0"
     author_endorsement: "participated"
   - title: "Polylogarithmic Descent for Almost All Collatz Orbits in Natural Density"
@@ -70,27 +80,54 @@ related_formalizations:
     relationship: "builds-on"
     note: >-
       Public frozen Lean 4.15.0 development supplying the clean, self-contained
-      58-module proof cone. The Palomar package adds the literal paper-strength
-      Corollary 1.2(1) wrapper and ports the resulting 59 modules to Lean 4.33.0.
+      82-module union of the four theorem dependency cones. The Palomar
+      package adds the literal paper-strength Corollary 1.2(1) wrapper and
+      ports the resulting 83 modules to Lean 4.33.0.
 
 status:
   scope: >-
-    The formalization proves the fixed-exponent theorem advertised in
-    Challenge.lean: for every A above the explicit first-passage entropy
-    threshold, c above 2/log(4/3), beta > 0, and every
-    0 < gamma < kappa_*(A - A_FP), it gives separate positive landing and
-    exceptional constants, a natural-density-one same-witness
-    landing/clock/ceiling set, and the stated eventual
-    O(X (log X)^(-gamma)) exceptional-count estimate. It does not include the
-    manuscript's critical log-log endpoint, arbitrary moving endpoint,
-    stretched-logarithmic companion, unaccelerated-map clock conversion, or
-    any pointwise Collatz assertion. It does not exclude exceptional cycles or
-    divergent orbits.
+    Challenge.lean advertises four declarations. The moving-endpoint theorem
+    accepts a uniformly bounded shell-dependent exponent profile whose explicit
+    entropy buffer tends to infinity and gives both a natural-density-one
+    same-witness set and a quantitative dyadic-shell exceptional ratio. The
+    fixed-exponent theorem gives, for every A above the explicit first-passage
+    entropy threshold, c above 2/log(4/3), beta > 0, and every
+    0 < gamma < kappa_*(A - A_FP), separate positive landing and exceptional
+    constants and the eventual O(X (log X)^(-gamma)) exceptional count. The
+    same-witness stretched-logarithmic theorem gives every 0 < delta < 1 and
+    beta > 0 with the formalized fixed 6.953 log n clock and orbit ceiling.
+    The separate quantitative stretched theorem gives, for every
+    0 < sigma < 1 - delta, an eventual bound
+    5 X exp(-rate (log X)^sigma) for the unclocked landing failure count. The
+    package does not advertise the manuscript's literal critical log-log and
+    triple-log specializations, the stretched theorem's endpoint
+    sigma = 1 - delta, one joint quantitative predicate with arbitrary clock
+    c > 2/log(4/3) and the same-witness ceiling, the unaccelerated-map clock
+    conversion, or any pointwise Collatz assertion. It does not exclude
+    exceptional cycles or divergent orbits.
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
   main_results:
+    - declaration: "CollatzFirstPassage.moving_polylogarithmic_natural_density_descent"
+      file: "Solution.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator.json"
+      literature_dependencies: []
     - declaration: "CollatzFirstPassage.polylogarithmic_natural_density_descent"
+      file: "Solution.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator.json"
+      literature_dependencies: []
+    - declaration: "CollatzFirstPassage.stretched_logarithmic_descent_with_orbit_ceiling"
+      file: "Solution.lean"
+      sorry_count: 0
+      axioms: ["propext", "Classical.choice", "Quot.sound"]
+      comparator_config: "comparator.json"
+      literature_dependencies: []
+    - declaration: "CollatzFirstPassage.stretched_logarithmic_quantitative_exceptional_count"
       file: "Solution.lean"
       sorry_count: 0
       axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -129,28 +166,50 @@ automation:
 
 fidelity:
   divergences: >-
-    No mathematical divergence is known in the advertised fixed-exponent
-    theorem. Its statement matches preprint Corollary 1.2(1), including the
-    complete strict gamma range and separate Ctar/Cexc constants, and is
-    exposed through definitionally equivalent Challenge/Solution namespaces.
-    The frozen proof cone and the exact-rate wrapper were checked on Lean
-    4.15.0 and ported to Lean 4.33.0 using import-path, parser, elaboration, and
-    tactic-compatibility edits only. Material outside the exact theorem
-    dependency cone was intentionally omitted.
+    The moving-endpoint declaration matches the manuscript's general
+    first-passage producer, and the fixed-exponent declaration matches
+    Corollary 1.2(1), including the complete strict gamma range and separate
+    Ctar/Cexc constants. The same-witness stretched-logarithmic declaration is
+    intentionally a qualitative projection: it keeps every 0 < delta < 1,
+    natural density one, a same-witness landing and orbit ceiling, but exposes
+    the formally proved fixed 6953/1000 clock. The separate quantitative
+    declaration retains every strict 0 < sigma < 1 - delta and the explicit
+    prefactor 5, but counts the unclocked landing predicate. It does not expose
+    the manuscript's endpoint sigma = 1 - delta or its joint clock/ceiling
+    predicate. The literal critical log-log/triple-log specializations are not
+    public declarations in this package. All four are exposed through
+    definitionally equivalent Challenge/Solution namespaces. The frozen proof
+    cone and exact-rate wrapper were ported to Lean 4.33.0 using import-path,
+    parser, elaboration, and tactic-compatibility edits only; their mathematical
+    hypotheses and conclusions were not strengthened during the port.
 
 review:
   status: "self-assessed"
   reviewers: []
   notes: >-
-    The author and Codex audited the statement against preprint Corollary
-    1.2(1), built the complete transitive proof cone, checked for admitted
-    obligations and project-specific axioms, and completed a fresh Linux
-    Comparator/Landrun/NanoDa replay. No independent human peer review or
-    Palomar acceptance is claimed.
+    The author and Codex audited the four statements against the manuscript
+    and frozen Lean exports, built the complete transitive proof cones, and
+    checked for admitted obligations and project-specific axioms. The
+    registered version-1 fixed theorem previously passed Palomar's independent
+    Comparator/Landrun/NanoDa workflow. This expanded version must receive a
+    fresh Comparator replay before registration. No independent human peer
+    review or journal acceptance is claimed.
 
 alignment:
   namespace: "CollatzFirstPassage"
   statements:
+    - source: >-
+        Preprint Theorem 1.1; Lean declaration
+        FirstPassageLinearTransport.timeoutEndpointLiteralNaturalDensityDescent
+      lean: "CollatzFirstPassage.moving_polylogarithmic_natural_density_descent"
+      module: "Solution"
+      status: "proved"
+      note: >-
+        Same bounded moving exponent profile, explicit entropy-buffer
+        divergence hypothesis, logarithmic clock, same-witness orbit ceiling,
+        natural-density-one conclusion, and dyadic-shell exceptional profile.
+        Namespace-local definitions expose the formula without importing the
+        proof library into Challenge.lean.
     - source: >-
         Preprint Corollary 1.2(1); Lean declaration
         FirstPassageLinearTransport.paper_cor12_item1_fixed_polylog
@@ -163,6 +222,30 @@ alignment:
         constants, with only namespace-local, definitionally equal names for
         the shortcut map, orbit, bad count, natural density one, logarithmic
         ratio, binary entropy, kappa_*, and A_FP.
+    - source: >-
+        Preprint Theorem 1.3 companion; Lean declaration
+        FirstPassageLinearTransport.firstPassageLinearTransportOrbitCeiling
+      lean: "CollatzFirstPassage.stretched_logarithmic_descent_with_orbit_ceiling"
+      module: "Solution"
+      status: "proved"
+      note: >-
+        Faithful qualitative projection for every 0 < delta < 1 and beta > 0:
+        natural density one, a landing at exp((log n)^(1-delta)), and an orbit
+        ceiling through the same witness. The declaration states the proof
+        library's fixed 6953/1000 clock and does not itself include the paper's
+        endpoint exceptional-count estimate or arbitrary-clock refinement.
+    - source: >-
+        Preprint Theorem 1.3 companion; Lean declaration
+        FirstPassageLinearTransport.firstPassageLinearTransportQuantitativeStretched
+      lean: "CollatzFirstPassage.stretched_logarithmic_quantitative_exceptional_count"
+      module: "Solution"
+      status: "proved"
+      note: >-
+        Formally proved quantitative companion for every strict
+        0 < sigma < 1 - delta, with eventual bound
+        5 X exp(-rate (log X)^sigma) on the unclocked landing failure count.
+        It is weaker than the manuscript's endpoint exponent 1 - delta and is
+        not a joint statement with the clock or same-witness orbit ceiling.
 
 acknowledgements: >-
   Built with Lean 4 and Mathlib. OpenAI Codex materially assisted as disclosed

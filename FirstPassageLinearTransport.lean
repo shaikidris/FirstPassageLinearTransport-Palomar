@@ -4,11 +4,15 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Idris Ali Shaik
 -/
 import FirstPassageLinearTransport.PaperCor12Item1
+import FirstPassageLinearTransport.TimeoutEndpointNaturalDensity
+import FirstPassageLinearTransport.OrbitCeiling
+import FirstPassageLinearTransport.QuantitativeNaturalDensityDescent
 
 /-!
 # First-passage linear transport
 
-Public root for the self-contained paper-strength fixed-exponent
-polylogarithmic natural-density theorem submitted to Palomar, including every
-exceptional exponent strictly below the explicit entropy margin.
+Public root for the four natural-density results submitted to Palomar: the
+moving-endpoint first-passage producer, the paper-strength fixed-exponent
+polylogarithmic theorem, the stretched-logarithmic same-witness companion, and
+the strict-exponent stretched-logarithmic exceptional-count theorem.
 -/

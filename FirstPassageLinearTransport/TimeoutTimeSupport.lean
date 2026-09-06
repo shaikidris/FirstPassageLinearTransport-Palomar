@@ -168,6 +168,26 @@ theorem timeoutTimePotential_nonneg
   unfold timeoutTimePotential
   split_ifs <;> positivity
 
+/-- At the source rank the timeout potential contains the complete `S²`
+reserve.  This elementary lower bound is useful when a terminal rank below
+the switch has to be absorbed into the common time corridor. -/
+theorem timeout_switch_sq_le_source_potential
+    (P : TimeoutHighRunData) {M S : ℕ} (hS : S < M + 1) :
+    (S : ℝ) ^ 2 ≤ timeoutTimePotential P M S (M + 1) := by
+  have hdHi : 0 < 1 - Real.sqrt (P.rHi : ℝ) := sub_pos.mpr
+    (timeout_sqrt_rat_lt_one
+      (by exact_mod_cast P.pHi.r_lt_one : P.rHi < 1))
+  have hcoefHi : 0 ≤ P.D + P.tau + 3 := by
+    nlinarith [P.D_pos, P.pHi.eta_pos]
+  rw [timeoutTimePotential, if_pos hS]
+  have hhigh : 0 ≤
+      ((P.D + P.tau + 3) *
+          Real.sqrt (Real.log ((M : ℝ) + 2)) *
+          Real.sqrt (((M + 1 : ℕ) : ℝ))) /
+        (1 - Real.sqrt (P.rHi : ℝ)) := by
+    positivity
+  linarith
+
 /-- One high rank drop pays its certified corridor and preserves the complete
 future low-phase reserve. -/
 theorem timeoutTimePotential_high_step
@@ -278,7 +298,7 @@ theorem timeoutTimePotential_low_step
           ((m : ℝ) - (timeoutTargetRank K₀ L m : ℝ))| + 1) +
         (S : ℝ) * (timeoutTargetRank K₀ L m : ℝ) ≤
       (S : ℝ) + (S : ℝ) * (timeoutTargetRank K₀ L m : ℝ) :=
-        by gcongr
+        add_le_add hlocal (le_refl _)
     _ = (S : ℝ) * ((timeoutTargetRank K₀ L m : ℝ) + 1) := by ring
     _ ≤ (S : ℝ) * (m : ℝ) := hmul
     _ ≤ (S : ℝ) * (qPrev : ℝ) :=
@@ -477,7 +497,7 @@ theorem TimeoutRecertificationRun.deviation_add_potential_le
             |driftGap * (hpass.duration : ℝ) -
               ((m : ℝ) - (timeoutTargetRank K₀ L m : ℝ))| + 1) +
             timeoutTimePotential P M S (timeoutTargetRank K₀ L m) :=
-              by gcongr
+              add_le_add habs (le_refl _)
         _ = |driftGap * (elapsed : ℝ) -
               (((M + 1 : ℕ) : ℝ) - (qPrev : ℝ))| +
             ((|driftGap * (hpass.duration : ℝ) -
@@ -485,7 +505,8 @@ theorem TimeoutRecertificationRun.deviation_add_potential_le
               timeoutTimePotential P M S (timeoutTargetRank K₀ L m)) := by ring
         _ ≤ |driftGap * (elapsed : ℝ) -
               (((M + 1 : ℕ) : ℝ) - (qPrev : ℝ))| +
-            timeoutTimePotential P M S qPrev := by gcongr
+            timeoutTimePotential P M S qPrev :=
+              add_le_add (le_refl _) hstep
         _ ≤ timeoutTimePotential P M S (M + 1) := ih
 
 /-- A finite cutoff containing every realized timeout-run time. -/
@@ -590,6 +611,25 @@ def timeoutTimeSupportConstant
   2 + 2 / driftGap *
     ((P.D + P.tau + 3) / (1 - Real.sqrt (P.rHi : ℝ)) +
       (C + 5) ^ 2)
+
+/-- The explicit timeout support constant is strictly positive. -/
+theorem timeoutTimeSupportConstant_pos
+    (P : TimeoutHighRunData) (C : ℝ) :
+    0 < timeoutTimeSupportConstant P C := by
+  have hrHi0 : 0 < (P.rHi : ℝ) := P.pHi.r_pos
+  have hsqrt1 : Real.sqrt (P.rHi : ℝ) < 1 := by
+    nlinarith [Real.sq_sqrt hrHi0.le, Real.sqrt_nonneg (P.rHi : ℝ),
+      P.pHi.r_lt_one]
+  have hden : 0 < 1 - Real.sqrt (P.rHi : ℝ) := sub_pos.mpr hsqrt1
+  have hnum : 0 ≤ P.D + P.tau + 3 := by
+    linarith [P.D_pos, P.pHi.eta_pos]
+  have hinner : 0 ≤
+      (P.D + P.tau + 3) / (1 - Real.sqrt (P.rHi : ℝ)) +
+        (C + 5) ^ 2 := by positivity
+  have hratio : 0 ≤ 2 / driftGap :=
+    div_nonneg (by norm_num) driftGap_pos.le
+  unfold timeoutTimeSupportConstant
+  nlinarith [mul_nonneg hratio hinner]
 
 private theorem eventually_timeout_log_sq_le_sqrt_mul :
     ∀ᶠ M : ℕ in atTop,

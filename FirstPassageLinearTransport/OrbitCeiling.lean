@@ -4,6 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Idris Ali Shaik
 -/
 import FirstPassageLinearTransport.NaturalDensityDescent
+import FirstPassageLinearTransport.TimeoutDensity
+import FirstPassageLinearTransport.RawDynamics
 
 /-!
 # Intermediate-orbit ceiling
@@ -21,6 +23,351 @@ open Filter
 open scoped Real Topology
 
 noncomputable section
+
+/-! ## Finite multiplicative maximum: shell and trajectory adapters -/
+
+theorem ballotMultiplier_finTwoEquiv (b : Fin 2) :
+    ballotMultiplier (finTwoEquiv b) = (3 : ℝ) ^ (b : ℕ) / 2 := by
+  have hb : b.val = 0 ∨ b.val = 1 := by omega
+  rcases hb with hb | hb
+  · have hbeq : b = 0 := Fin.ext hb
+    subst b
+    norm_num [ballotMultiplier, finTwoEquiv]
+  · have hbeq : b = 1 := Fin.ext hb
+    subst b
+    norm_num [ballotMultiplier, finTwoEquiv]
+
+theorem ballotMultiplier_boolParityWord_zero (r n : ℕ) :
+    ballotMultiplier (boolParityWord (r + 1) n 0) =
+      (3 : ℝ) ^ (parityBit n 0 : ℕ) / 2 := by
+  exact ballotMultiplier_finTwoEquiv (parityBit n 0)
+
+/-- Avoiding the recursive multiplicative hit event bounds every pure
+Collatz multiplicative prefix. -/
+theorem multiplicative_prefix_le_of_not_crosses :
+    ∀ {r n : ℕ} {u z : ℝ},
+      0 ≤ z →
+      ¬crossesMultiplicativeFrom u r z (boolParityWord r n) →
+      ∀ H : ℕ, H ≤ r →
+        z * ((3 : ℝ) ^ oddCount n H / (2 : ℝ) ^ H) ≤ u := by
+  intro r
+  induction r with
+  | zero =>
+      intro n u z hz hsafe H hHr
+      have hH : H = 0 := by omega
+      subst H
+      have hzu : z ≤ u := le_of_not_gt (by
+        simpa [crossesMultiplicativeFrom] using hsafe)
+      simpa using hzu
+  | succ r ih =>
+      intro n u z hz hsafe H hHr
+      have hdecomp :
+          ¬u < z ∧
+            ¬crossesMultiplicativeFrom u r
+              (z * ballotMultiplier (boolParityWord (r + 1) n 0))
+              (boolParityWord r (shortcut n)) := by
+        have hraw :
+            ¬u < z ∧
+              ¬crossesMultiplicativeFrom u r
+                (z * ballotMultiplier (boolParityWord (r + 1) n 0))
+                (fun i => boolParityWord (r + 1) n i.succ) := by
+          simpa [crossesMultiplicativeFrom] using hsafe
+        simpa [boolParityWord_tail] using hraw
+      rcases hdecomp with ⟨hcurrent, htail⟩
+      cases H with
+      | zero =>
+          simpa using (le_of_not_gt hcurrent)
+      | succ H =>
+          have hHr' : H ≤ r := by omega
+          have hmult0 : 0 ≤ ballotMultiplier
+              (boolParityWord (r + 1) n 0) := by
+            cases hbit : boolParityWord (r + 1) n 0 <;>
+              norm_num [ballotMultiplier, hbit]
+          have hchild := ih
+            (n := shortcut n) (u := u)
+            (z := z * ballotMultiplier (boolParityWord (r + 1) n 0))
+            (mul_nonneg hz hmult0) htail H hHr'
+          rw [ballotMultiplier_boolParityWord_zero] at hchild
+          rw [oddCount_succ_shift]
+          rw [pow_add, pow_succ]
+          convert hchild using 1 <;> ring
+
+/-- A crossing of the recursive finite-word event is witnessed by an actual
+prefix of the corresponding shortcut parity word. -/
+theorem exists_multiplicative_prefix_gt_of_crosses :
+    ∀ {r n : ℕ} {u z : ℝ},
+      crossesMultiplicativeFrom u r z (boolParityWord r n) →
+      ∃ H : ℕ, H ≤ r ∧
+        u < z * ((3 : ℝ) ^ oddCount n H / (2 : ℝ) ^ H) := by
+  intro r
+  induction r with
+  | zero =>
+      intro n u z hcross
+      refine ⟨0, by omega, ?_⟩
+      simpa [crossesMultiplicativeFrom] using hcross
+  | succ r ih =>
+      intro n u z hcross
+      have hdecomp :
+          u < z ∨
+            crossesMultiplicativeFrom u r
+              (z * ballotMultiplier (boolParityWord (r + 1) n 0))
+              (boolParityWord r (shortcut n)) := by
+        have hraw :
+            u < z ∨
+              crossesMultiplicativeFrom u r
+                (z * ballotMultiplier (boolParityWord (r + 1) n 0))
+                (fun i => boolParityWord (r + 1) n i.succ) := by
+          simpa [crossesMultiplicativeFrom] using hcross
+        simpa [boolParityWord_tail] using hraw
+      rcases hdecomp with hcurrent | htail
+      · exact ⟨0, by omega, by simpa using hcurrent⟩
+      · obtain ⟨H, hHr, hchild⟩ := ih htail
+        refine ⟨H + 1, by omega, ?_⟩
+        rw [ballotMultiplier_boolParityWord_zero] at hchild
+        rw [oddCount_succ_shift, pow_add, pow_succ]
+        convert hchild using 1 <;> ring
+
+/-- The pure multiplicative part of the affine Collatz iterate is a lower
+bound for the actual shortcut state. -/
+theorem pure_multiplicative_le_orbit (n j : ℕ) :
+    ((3 : ℝ) ^ oddCount n j / (2 : ℝ) ^ j) * (n : ℝ) ≤
+      (orbit j n : ℝ) := by
+  rw [exact_affine_iterate_real]
+  exact le_add_of_nonneg_right
+    (Finset.sum_nonneg fun i _hi => by positivity)
+
+/-- Residues whose finite Collatz multiplicative word crosses `u`. -/
+noncomputable def multiplicativeHitResidues (M : ℕ) (u : ℝ) :
+    Finset (Fin (2 ^ M)) := by
+  classical
+  exact Finset.univ.filter fun x =>
+    crossesMultiplicativeFrom u M 1 (boolParityCode M x)
+
+/-- Exact parity restriction from multiplicative-hit residues to Boolean
+words. -/
+noncomputable def multiplicativeHitResidueEquiv (M : ℕ) (u : ℝ) :
+    {x : Fin (2 ^ M) //
+      crossesMultiplicativeFrom u M 1 (boolParityCode M x)} ≃
+      {v : Fin M → Bool // crossesMultiplicativeFrom u M 1 v} :=
+  (boolParityEquiv M).subtypeEquiv (fun x => by
+    rw [boolParityEquiv_apply])
+
+theorem card_multiplicativeHitResidues (M : ℕ) (u : ℝ) :
+    (multiplicativeHitResidues M u).card =
+      multiplicativeHitCount u M 1 := by
+  classical
+  unfold multiplicativeHitResidues multiplicativeHitCount
+  rw [← Fintype.card_subtype (fun x : Fin (2 ^ M) =>
+        crossesMultiplicativeFrom u M 1 (boolParityCode M x)),
+      ← Fintype.card_subtype (crossesMultiplicativeFrom u M 1)]
+  exact Fintype.card_congr (multiplicativeHitResidueEquiv M u)
+
+/-- The exact dyadic-shell event corresponding to the finite multiplicative
+hit. -/
+noncomputable def shellMultiplicativeHit (M : ℕ) (u : ℝ) : Finset ℕ := by
+  classical
+  exact (dyadicShell M).filter fun n =>
+    crossesMultiplicativeFrom u M 1 (boolParityWord M n)
+
+theorem card_shellMultiplicativeHit (M : ℕ) (u : ℝ) :
+    (shellMultiplicativeHit M u).card = multiplicativeHitCount u M 1 := by
+  classical
+  have heq : shellMultiplicativeHit M u =
+      (dyadicShell M).filter fun n =>
+        (⟨n % (2 ^ M), Nat.mod_lt _ (pow_pos (by omega) _)⟩ :
+          Fin (2 ^ M)) ∈ multiplicativeHitResidues M u := by
+    ext n
+    simp only [shellMultiplicativeHit, multiplicativeHitResidues,
+      Finset.mem_filter, Finset.mem_univ, true_and]
+    exact and_congr_right (fun _ => by
+      rw [boolParityCode_eq_word, boolParityWord_mod])
+  rw [heq, card_dyadicShell_filter_mod_mem,
+    card_multiplicativeHitResidues]
+
+theorem normalized_card_shellMultiplicativeHit_le_inv
+    {u : ℝ} (hu : 0 < u) (M : ℕ) :
+    ((shellMultiplicativeHit M u).card : ℝ) / (2 : ℝ) ^ M ≤ u⁻¹ := by
+  rw [card_shellMultiplicativeHit]
+  exact normalized_multiplicativeHitCount_le_inv hu M
+
+/-- The finite reciprocal maximum theorem transfers without loss to a
+complete dyadic shell.  This is the shell form of the lower and upper bounds
+used by the height obstruction. -/
+theorem normalized_card_shellMultiplicativeHit_reciprocal
+    {u : ℝ} (hu : 1 ≤ u) {M : ℕ} (hM : 0 < M)
+    (hlog : Real.log u ≤
+      reciprocalMaximumEpsilon * (M : ℝ) * Real.log 3) :
+    (2 / (3 * u)) *
+        (1 - reciprocalMaximumConstant / (M : ℝ)) ≤
+      ((shellMultiplicativeHit M u).card : ℝ) / (2 : ℝ) ^ M ∧
+    ((shellMultiplicativeHit M u).card : ℝ) / (2 : ℝ) ^ M ≤ u⁻¹ := by
+  rw [card_shellMultiplicativeHit]
+  exact reciprocal_finite_multiplicative_maximum hu hM hlog
+
+/-- Membership in the shell multiplicative-hit event forces an actual
+shortcut prefix above the corresponding relative-height ceiling. -/
+theorem exists_orbit_gt_mul_of_mem_shellMultiplicativeHit
+    {M n : ℕ} {u : ℝ} (hn : n ∈ shellMultiplicativeHit M u) :
+    ∃ j : ℕ, j ≤ M ∧ u * (n : ℝ) < (orbit j n : ℝ) := by
+  classical
+  have hnFilter := Finset.mem_filter.mp hn
+  have hnShell : n ∈ dyadicShell M := hnFilter.1
+  have hcross :
+      crossesMultiplicativeFrom u M 1 (boolParityWord M n) := hnFilter.2
+  obtain ⟨j, hjM, hj⟩ :=
+    exists_multiplicative_prefix_gt_of_crosses hcross
+  have hnPosNat : 0 < n := by
+    have hnLower : 2 ^ M ≤ n := (mem_dyadicShell.mp hnShell).1
+    exact (pow_pos (by omega) M).trans_le hnLower
+  have hnPos : 0 < (n : ℝ) := by exact_mod_cast hnPosNat
+  have hscaled := mul_lt_mul_of_pos_right hj hnPos
+  have hscaled' :
+      u * (n : ℝ) <
+        ((3 : ℝ) ^ oddCount n j / (2 : ℝ) ^ j) * (n : ℝ) := by
+    simpa using hscaled
+  exact ⟨j, hjM, hscaled'.trans_le (pure_multiplicative_le_orbit n j)⟩
+
+/-- The quarter-threshold normalization used by the manuscript contributes
+the explicit shell exception `4/R`. -/
+theorem normalized_card_shellMultiplicativeHit_quarter_le
+    {R : ℝ} (hR : 0 < R) (M : ℕ) :
+    ((shellMultiplicativeHit M (R / 4)).card : ℝ) /
+        (2 : ℝ) ^ M ≤ 4 / R := by
+  have h := normalized_card_shellMultiplicativeHit_le_inv
+    (u := R / 4) (by positivity) M
+  calc
+    _ ≤ (R / 4)⁻¹ := h
+    _ = 4 / R := by field_simp
+
+/-- Outside the finite-word hit event, every shortcut prefix up to the shell
+rank is bounded by twice the prescribed multiplicative threshold. -/
+theorem orbit_lt_two_mul_of_not_mem_shellMultiplicativeHit
+    {M n : ℕ} {u : ℝ}
+    (hn : n ∈ dyadicShell M) (hnGood : n ∉ shellMultiplicativeHit M u)
+    {j : ℕ} (hj : j ≤ M) :
+    (orbit j n : ℝ) < 2 * u * n := by
+  have hsafe :
+      ¬crossesMultiplicativeFrom u M 1 (boolParityWord M n) := by
+    simpa [shellMultiplicativeHit, hn] using hnGood
+  have hmult := multiplicative_prefix_le_of_not_crosses
+    (z := 1) (by norm_num) hsafe j hj
+  have hscaled := orbit_scaled_lt_two_mul_parity hn hj
+  have hpow : 0 < (2 : ℝ) ^ j := by positivity
+  have hscaledR :
+      (2 : ℝ) ^ j * (orbit j n : ℝ) <
+        2 * (3 : ℝ) ^ oddCount n j * (n : ℝ) := by
+    exact_mod_cast hscaled
+  have hFn :
+      ((3 : ℝ) ^ oddCount n j / (2 : ℝ) ^ j) * (n : ℝ) ≤
+        u * (n : ℝ) := by
+    have hF : (3 : ℝ) ^ oddCount n j / (2 : ℝ) ^ j ≤ u := by
+      simpa using hmult
+    gcongr
+  apply lt_of_mul_lt_mul_left (a := (2 : ℝ) ^ j) _ hpow.le
+  calc
+    (2 : ℝ) ^ j * (orbit j n : ℝ) <
+        2 * (3 : ℝ) ^ oddCount n j * (n : ℝ) := hscaledR
+    _ = (2 : ℝ) ^ j *
+        (2 * (((3 : ℝ) ^ oddCount n j / (2 : ℝ) ^ j) *
+          (n : ℝ))) := by field_simp
+    _ ≤ (2 : ℝ) ^ j * (2 * (u * (n : ℝ))) := by gcongr
+    _ = (2 : ℝ) ^ j * (2 * u * n) := by ring
+
+/-- Every raw iterate through a shortcut prefix is either a shortcut state or
+the single doubled intermediate state following an odd shortcut source. -/
+theorem rawOrbit_le_two_mul_of_shortcut_prefix_le
+    {n k : ℕ} {C : ℝ}
+    (hshortcut : ∀ j : ℕ, j ≤ k → (orbit j n : ℝ) ≤ C) :
+    ∀ i : ℕ, i ≤ rawTime n k → (rawOrbit i n : ℝ) ≤ 2 * C := by
+  induction k with
+  | zero =>
+      intro i hi
+      have hi0 : i = 0 := by simpa [rawTime] using hi
+      subst i
+      have hnC := hshortcut 0 (by omega)
+      simp [orbit_zero] at hnC
+      have hC0 : 0 ≤ C := (Nat.cast_nonneg n).trans hnC
+      simp only [rawOrbit_zero]
+      linarith
+  | succ k ih =>
+      have hprev : ∀ j : ℕ, j ≤ k → (orbit j n : ℝ) ≤ C :=
+        fun j hj => hshortcut j (hj.trans (Nat.le_succ k))
+      have hIH := ih hprev
+      intro i hi
+      by_cases hiprev : i ≤ rawTime n k
+      · exact hIH i hiprev
+      · let q := i - rawTime n k
+        have hiForm : i = q + rawTime n k := by
+          dsimp [q]
+          omega
+        have hqPos : 0 < q := by dsimp [q]; omega
+        have hrawBase : rawOrbit (rawTime n k) n = orbit k n :=
+          rawOrbit_rawTime_eq_orbit n k
+        rcases Nat.mod_two_eq_zero_or_one (orbit k n) with heven | hodd
+        · have hbit : (parityBit n k : ℕ) = 0 := by
+            simpa [parityBit] using heven
+          have htimeSucc : rawTime n (k + 1) = rawTime n k + 1 := by
+            simp [rawTime, oddCount_succ, hbit]
+            omega
+          have hq : q = 1 := by
+            rw [htimeSucc] at hi
+            dsimp [q]
+            omega
+          rw [hiForm, rawOrbit_add, hrawBase, hq, rawOrbit_succ,
+            rawOrbit_zero, rawCollatz_eq_shortcut_of_even heven, ← orbit_succ]
+          have hnext := hshortcut (k + 1) (by omega)
+          have hC0 : 0 ≤ C := (Nat.cast_nonneg (orbit (k + 1) n)).trans hnext
+          linarith
+        · have hbit : (parityBit n k : ℕ) = 1 := by
+            simpa [parityBit] using hodd
+          have htimeSucc : rawTime n (k + 1) = rawTime n k + 2 := by
+            simp [rawTime, oddCount_succ, hbit]
+            omega
+          have hqLe : q ≤ 2 := by
+            rw [htimeSucc] at hi
+            dsimp [q]
+            omega
+          have hnext := hshortcut (k + 1) (by omega)
+          have hC0 : 0 ≤ C := (Nat.cast_nonneg (orbit (k + 1) n)).trans hnext
+          have hqCases : q = 1 ∨ q = 2 := by omega
+          rcases hqCases with hq | hq
+          · rw [hiForm, hq, rawOrbit_add, hrawBase, rawOrbit_succ,
+              rawOrbit_zero, rawCollatz_of_odd hodd]
+            calc
+              ((3 * orbit k n + 1 : ℕ) : ℝ) =
+                  (2 : ℝ) * (orbit (k + 1) n : ℝ) := by
+                exact_mod_cast (show 3 * orbit k n + 1 =
+                  2 * orbit (k + 1) n by
+                    rw [orbit_succ, shortcut_of_odd hodd]
+                    omega)
+              _ ≤ 2 * C :=
+                mul_le_mul_of_nonneg_left hnext (by norm_num)
+          · rw [hiForm, hq, rawOrbit_add, hrawBase,
+              rawOrbit_two_eq_shortcut_of_odd hodd, ← orbit_succ]
+            linarith
+
+/-- The exact first-block height interface used by the strengthened shell
+theorem. -/
+theorem initial_shortcut_raw_height_of_not_mem_shellMultiplicativeHit
+    {M n : ℕ} {R : ℝ}
+    (hn : n ∈ dyadicShell M)
+    (hnGood : n ∉ shellMultiplicativeHit M (R / 4)) :
+    (∀ j : ℕ, j ≤ M → (orbit j n : ℝ) < (n : ℝ) * R / 2) ∧
+      (∀ i : ℕ, i ≤ rawTime n M →
+        (rawOrbit i n : ℝ) ≤ (n : ℝ) * R) := by
+  have hshortcut : ∀ j : ℕ, j ≤ M →
+      (orbit j n : ℝ) < (n : ℝ) * R / 2 := by
+    intro j hj
+    have h := orbit_lt_two_mul_of_not_mem_shellMultiplicativeHit
+      hn hnGood hj
+    convert h using 1 <;> ring
+  refine ⟨hshortcut, ?_⟩
+  intro i hi
+  have hle : ∀ j : ℕ, j ≤ M →
+      (orbit j n : ℝ) ≤ (n : ℝ) * R / 2 :=
+    fun j hj => (hshortcut j hj).le
+  have hraw := rawOrbit_le_two_mul_of_shortcut_prefix_le hle i hi
+  convert hraw using 1 <;> ring
 
 /-- Every prefix of one retained stopped block stays below the local
 `1 + eta` power envelope. -/

@@ -155,6 +155,8 @@ structure ShrinkingPolylogParameterPackage (A c beta : ℝ) where
   low_rate_margin : kappa <
     A * min bLo cDyadic / Real.log 2 - 1 / 2
   clock_pressure : 1 / (1 - (run.rHi : ℝ)) < c * Real.log 2
+  high_height_contraction :
+    (run.rHi : ℝ) * (1 + run.tau) < 1
   tau_lt_beta : run.tau < beta
   kappa_pos : 0 < kappa
 
@@ -180,13 +182,28 @@ theorem exists_shrinkingPolylogParameterPackage
   have hHiInterval : a0 < 1 - 1 / (c * Real.log 2) := by
     unfold driftGap at hInvGap
     linarith
-  obtain ⟨rHi, hrHiLower, hrHiUpper⟩ := exists_rat_btwn hHiInterval
+  let rHiCeiling := min (1 - 1 / (c * Real.log 2)) ((a0 + 1) / 2)
+  have hSafeInterval : a0 < (a0 + 1) / 2 := by
+    linarith [a0_lt_one]
+  have hHiInterval' : a0 < rHiCeiling := by
+    dsimp [rHiCeiling]
+    exact lt_min hHiInterval hSafeInterval
+  obtain ⟨rHi, hrHiLower, hrHiUpper⟩ := exists_rat_btwn hHiInterval'
+  have hrHiClock : (rHi : ℝ) < 1 - 1 / (c * Real.log 2) :=
+    hrHiUpper.trans_le (by
+      dsimp [rHiCeiling]
+      exact min_le_left _ _)
+  have hrHiSafe : (rHi : ℝ) < (a0 + 1) / 2 :=
+    hrHiUpper.trans_le (by
+      dsimp [rHiCeiling]
+      exact min_le_right _ _)
   have hrHiOne : (rHi : ℝ) < 1 := by
     have hinv0 : 0 < 1 / (c * Real.log 2) := by positivity
-    linarith
+    linarith [hrHiClock]
   have hrHiPos : (0 : ℝ) < rHi := a0_pos.trans hrHiLower
   have hclock : 1 / (1 - (rHi : ℝ)) < c * Real.log 2 := by
-    have hgap : 1 / (c * Real.log 2) < 1 - (rHi : ℝ) := by linarith
+    have hgap : 1 / (c * Real.log 2) < 1 - (rHi : ℝ) := by
+      linarith [hrHiClock]
     have hden : 0 < 1 - (rHi : ℝ) := sub_pos.mpr hrHiOne
     rw [div_lt_iff₀ hden]
     have hmul := (div_lt_iff₀ hcLog).1 hgap
@@ -204,6 +221,15 @@ theorem exists_shrinkingPolylogParameterPackage
     htauD.trans_le ((min_le_right _ _).trans (min_le_left _ _))
   have htauA : tau < a0 :=
     htauD.trans_le ((min_le_right _ _).trans (min_le_right _ _))
+  have htauSafe : tau < 1 - (rHi : ℝ) := by
+    have hRankSafe : (rHi : ℝ) - a0 < 1 - (rHi : ℝ) := by
+      linarith [hrHiSafe]
+    exact htauGap.trans hRankSafe
+  have hheightContract : (rHi : ℝ) * (1 + tau) < 1 := by
+    have hlinear : 1 + tau < 2 - (rHi : ℝ) := by
+      linarith [htauSafe]
+    have hmul := mul_lt_mul_of_pos_left hlinear hrHiPos
+    nlinarith [sq_nonneg ((rHi : ℝ) - 1)]
   let pHi := Classical.choice
     (exists_stageSetup hrHiLower hrHiOne htau0 htauGap)
   obtain ⟨lambdaLo, etaLo, bLo, kappa,
@@ -318,6 +344,7 @@ theorem exists_shrinkingPolylogParameterPackage
     high_rate_margin := by simpa [run] using hHigh
     low_rate_margin := by simpa using hkappa
     clock_pressure := by simpa [run] using hclock
+    high_height_contraction := by simpa [run] using hheightContract
     tau_lt_beta := by simpa [run] using htauBeta
     kappa_pos := hkappa0 }⟩
 

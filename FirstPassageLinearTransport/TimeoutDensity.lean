@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Idris Ali Shaik
 -/
 import FirstPassageLinearTransport.TimeoutCore
+import FirstPassageLinearTransport.FiniteBallot
 
 /-!
 # Exact timeout target counting
@@ -39,6 +40,376 @@ theorem card_boolSupport_boolParityWord (m n : ℕ) :
     _ = ∑ i ∈ Finset.range m, (parityBit n i : ℕ) := by
       simpa using
         (Fin.sum_univ_eq_sum_range (fun i => (parityBit n i : ℕ)) m)
+
+/-- Up to its shell-rank horizon, the exact affine iterate is bounded by
+twice its pure multiplicative parity term. -/
+theorem orbit_scaled_lt_two_mul_parity
+    {m x j : ℕ} (hx : x ∈ dyadicShell m) (hj : j ≤ m) :
+    2 ^ j * orbit j x < 2 * 3 ^ oddCount x j * x := by
+  rw [exact_affine_iterate_scaled]
+  have hcorr := affineCorrection_lt_two_pow_mul_three_pow x j
+  have hjpow : 2 ^ j ≤ 2 ^ m := Nat.pow_le_pow_right (by omega) hj
+  have hxm : 2 ^ m ≤ x := (mem_dyadicShell.mp hx).1
+  have htwojx : 2 ^ j ≤ x := hjpow.trans hxm
+  calc
+    3 ^ oddCount x j * x + affineCorrection x j <
+        3 ^ oddCount x j * x + 2 ^ j * 3 ^ oddCount x j :=
+      Nat.add_lt_add_left hcorr _
+    _ ≤ 3 ^ oddCount x j * x + x * 3 ^ oddCount x j := by
+      exact Nat.add_le_add_left
+        (Nat.mul_le_mul_right (3 ^ oddCount x j) htwojx) _
+    _ = 2 * 3 ^ oddCount x j * x := by ring
+
+theorem wordPrefix_boolParityWord
+    {m : ℕ} (x : ℕ) (j : Fin (m + 1)) :
+    wordPrefix (boolParityWord m x) j = boolParityWord j x := by
+  funext i
+  simp [wordPrefix, boolParityWord]
+
+/-- Every prefix of a literal timeout word stays above the exact logarithmic
+barrier supplied by the parent and target ranks. -/
+theorem timeout_prefix_word_sum_lower
+    {K₀ : ℝ} {L m x : ℕ}
+    (hx : x ∈ dyadicShell m)
+    (htimeout : LowStageTimeout K₀ L m x)
+    (hq : timeoutTargetRank K₀ L m ≤ m)
+    (j : Fin (m + 1)) :
+    -(((m + 2 - timeoutTargetRank K₀ L m : ℕ) : ℝ) * Real.log 2) <
+      wordIncrementSum collatzLogIncrement (boolParityWord j x) := by
+  let q := timeoutTargetRank K₀ L m
+  let k := (j : ℕ)
+  have hk : k ≤ m := by
+    dsimp [k]
+    omega
+  have htimeoutj : 2 ^ q < orbit k x := by
+    simpa [q, k] using htimeout j
+  have hscaled := orbit_scaled_lt_two_mul_parity hx hk
+  have hxupper : x < 2 ^ (m + 1) := (mem_dyadicShell.mp hx).2
+  have hpowk : 0 < 2 ^ k := by positivity
+  have hnat :
+      2 ^ (q + k) < 3 ^ oddCount x k * 2 ^ (m + 2) := by
+    calc
+      2 ^ (q + k) = 2 ^ k * 2 ^ q := by
+        rw [pow_add]
+        ring
+      _ < 2 ^ k * orbit k x :=
+        Nat.mul_lt_mul_of_pos_left htimeoutj hpowk
+      _ < 2 * 3 ^ oddCount x k * x := hscaled
+      _ < 2 * 3 ^ oddCount x k * 2 ^ (m + 1) := by
+        exact Nat.mul_lt_mul_of_pos_left hxupper (by positivity)
+      _ = 3 ^ oddCount x k * 2 ^ (m + 2) := by
+        rw [pow_succ]
+        ring
+  have hreal :
+      (2 : ℝ) ^ (q + k) <
+        (3 : ℝ) ^ oddCount x k * (2 : ℝ) ^ (m + 2) := by
+    exact_mod_cast hnat
+  have hlog := Real.strictMonoOn_log
+    (Set.mem_Ioi.mpr (by positivity : (0 : ℝ) < (2 : ℝ) ^ (q + k)))
+    (Set.mem_Ioi.mpr
+      (by positivity : (0 : ℝ) <
+        (3 : ℝ) ^ oddCount x k * (2 : ℝ) ^ (m + 2))) hreal
+  rw [Real.log_pow, Real.log_mul (by positivity) (by positivity),
+    Real.log_pow, Real.log_pow] at hlog
+  have hqle : q ≤ m + 2 := hq.trans (by omega)
+  have hcastsub : ((m + 2 - q : ℕ) : ℝ) =
+      (m + 2 : ℝ) - (q : ℝ) := by
+    rw [Nat.cast_sub hqle]
+    push_cast
+    rfl
+  have hsum :
+      wordIncrementSum collatzLogIncrement (boolParityWord j x) =
+        (oddCount x k : ℝ) * Real.log 3 - (k : ℝ) * Real.log 2 := by
+    rw [wordIncrementSum_collatz, card_boolSupport_boolParityWord]
+  rw [hsum, hcastsub]
+  push_cast at hlog ⊢
+  linarith
+
+/-- Literal timeout containment in an exact finite-word barrier language.
+The following uniform low-rank theorem replaces this rank-dependent barrier
+by the fixed constant used in Lemma 6.3. -/
+theorem timeout_word_survives_exact_barrier
+    {K₀ : ℝ} {L m x : ℕ}
+    (hx : x ∈ dyadicShell m)
+    (htimeout : LowStageTimeout K₀ L m x)
+    (hq : timeoutTargetRank K₀ L m ≤ m) :
+    wordSurvivesFrom
+      (-(((m + 2 - timeoutTargetRank K₀ L m : ℕ) : ℝ) * Real.log 2))
+      collatzLogIncrement m 0 (boolParityWord m x) := by
+  apply wordSurvivesFrom_of_prefix
+  intro j
+  rw [wordPrefix_boolParityWord]
+  simpa using (timeout_prefix_word_sum_lower hx htimeout hq j).le
+
+/-- Lowering a finite-word barrier preserves survival. -/
+theorem wordSurvivesFrom_mono_lower
+    {lo lo' : ℝ} {increment : Bool → ℝ} {r : ℕ} {z : ℝ}
+    {v : Fin r → Bool} (hlo : lo' ≤ lo)
+    (h : wordSurvivesFrom lo increment r z v) :
+    wordSurvivesFrom lo' increment r z v := by
+  induction r generalizing z with
+  | zero =>
+      exact hlo.trans h
+  | succ r ih =>
+      exact ⟨hlo.trans h.1, ih h.2⟩
+
+/-- On a low-rank window `m ≤ C L`, the timeout target loses at most a
+fixed real amount of rank.  This is the floor calculation behind the uniform
+barrier used in the finite ballot estimate. -/
+theorem timeout_rank_gap_le_uniform
+    {K₀ C : ℝ} {L m : ℕ}
+    (hK₀ : 0 ≤ K₀) (hL : 0 < L)
+    (hmC : (m : ℝ) ≤ C * (L : ℝ)) :
+    (m : ℝ) - timeoutTargetRank K₀ L m ≤ C * K₀ / 2 + 1 := by
+  let r := movingLowRatio K₀ L
+  let q := timeoutTargetRank K₀ L m
+  have hLR : 0 < (L : ℝ) := by positivity
+  have hq : r * (m : ℝ) - 1 < (q : ℝ) := by
+    simpa [r, q, timeoutTargetRank] using
+      (Nat.sub_one_lt_floor (movingLowRatio K₀ L * (m : ℝ)))
+  have hscale : K₀ * (m : ℝ) / (2 * (L : ℝ)) ≤ C * K₀ / 2 := by
+    have hmul := mul_le_mul_of_nonneg_left hmC hK₀
+    rw [div_le_iff₀ (show 0 < (2 : ℝ) * (L : ℝ) by positivity)]
+    nlinarith
+  dsimp [r] at hq
+  unfold movingLowRatio at hq
+  change (m : ℝ) - (q : ℝ) ≤ C * K₀ / 2 + 1
+  have hrw :
+      (1 - K₀ / (2 * (L : ℝ))) * (m : ℝ) =
+        (m : ℝ) - K₀ * (m : ℝ) / (2 * (L : ℝ)) := by
+    field_simp
+  rw [hrw] at hq
+  nlinarith
+
+/-- Every literal timeout word in a fixed low-rank window survives one
+barrier depending only on the window constants.  The extra two rank units
+come from the uniform affine-orbit comparison above. -/
+theorem timeout_word_survives_uniform_barrier
+    {K₀ C : ℝ} {L m x : ℕ}
+    (hK₀ : 0 ≤ K₀) (hL : 0 < L)
+    (hmC : (m : ℝ) ≤ C * (L : ℝ))
+    (hx : x ∈ dyadicShell m)
+    (htimeout : LowStageTimeout K₀ L m x)
+    (hq : timeoutTargetRank K₀ L m ≤ m) :
+    wordSurvivesFrom
+      (-((C * K₀ / 2 + 3) * Real.log 2))
+      collatzLogIncrement m 0 (boolParityWord m x) := by
+  have hqle : timeoutTargetRank K₀ L m ≤ m + 2 := hq.trans (by omega)
+  have hgapcast :
+      (((m + 2 - timeoutTargetRank K₀ L m : ℕ) : ℝ)) =
+        (m : ℝ) + 2 - timeoutTargetRank K₀ L m := by
+    rw [Nat.cast_sub hqle]
+    push_cast
+    rfl
+  have hgap := timeout_rank_gap_le_uniform hK₀ hL hmC
+  apply wordSurvivesFrom_mono_lower
+    (lo := -(((m + 2 - timeoutTargetRank K₀ L m : ℕ) : ℝ) * Real.log 2))
+  · rw [hgapcast]
+    apply neg_le_neg
+    gcongr
+    linarith [Real.log_nonneg (by norm_num : (1 : ℝ) ≤ 2)]
+  · exact timeout_word_survives_exact_barrier hx htimeout hq
+
+/-- Survival includes the endpoint after all letters have been read. -/
+theorem wordSurvivesFrom_terminal
+    {lo : ℝ} {increment : Bool → ℝ} {r : ℕ} {z : ℝ}
+    {v : Fin r → Bool}
+    (h : wordSurvivesFrom lo increment r z v) :
+    lo ≤ z + wordIncrementSum increment v := by
+  induction r generalizing z with
+  | zero =>
+      simpa [wordIncrementSum, wordSurvivesFrom] using h
+  | succ r ih =>
+      have ht := ih h.2
+      unfold wordIncrementSum at ht
+      rw [wordIncrementSum, Fin.sum_univ_succ]
+      simpa [add_assoc] using ht
+
+/-- The unique integer bin containing the shifted terminal logarithmic
+increment of a finite word. -/
+noncomputable def collatzTerminalBinIndex
+    {m : ℕ} (B : ℝ) (v : Fin m → Bool) : ℕ :=
+  ⌊B + wordIncrementSum collatzLogIncrement v⌋₊
+
+/-- Every lower-barrier-surviving word belongs to its canonical terminal
+unit bin. -/
+theorem collatzFullBarrierBinEvent_at_index
+    {m : ℕ} {B : ℝ} {v : Fin m → Bool}
+    (hsurv : wordSurvivesFrom (-B) collatzLogIncrement m 0 v) :
+    collatzFullBarrierBinEvent B (collatzTerminalBinIndex B v) v := by
+  have hterminal := wordSurvivesFrom_terminal hsurv
+  have hnonneg : 0 ≤ B + wordIncrementSum collatzLogIncrement v := by
+    linarith
+  have hfloor :
+      (collatzTerminalBinIndex B v : ℝ) ≤
+        B + wordIncrementSum collatzLogIncrement v := by
+    simpa [collatzTerminalBinIndex] using Nat.floor_le hnonneg
+  have hfloorNext :
+      B + wordIncrementSum collatzLogIncrement v <
+        (collatzTerminalBinIndex B v : ℝ) + 1 := by
+    have h := Nat.lt_floor_add_one
+      (B + wordIncrementSum collatzLogIncrement v)
+    simpa [collatzTerminalBinIndex] using h
+  refine ⟨hsurv, ?_⟩
+  unfold collatzMiddleInterval
+  constructor <;> linarith
+
+/-- The Collatz logarithmic increment of a word is at most its length. -/
+theorem wordIncrementSum_collatz_le_length
+    {m : ℕ} (v : Fin m → Bool) :
+    wordIncrementSum collatzLogIncrement v ≤ m := by
+  unfold wordIncrementSum
+  calc
+    (∑ i : Fin m, collatzLogIncrement (v i)) ≤ ∑ _i : Fin m, (1 : ℝ) := by
+      apply Finset.sum_le_sum
+      intro i _hi
+      exact (le_abs_self _).trans (collatzLogIncrement_abs_le_one (v i))
+    _ = (m : ℝ) := by simp
+
+/-- The canonical terminal bin lies in a finite range depending only on the
+word length and the barrier. -/
+theorem collatzTerminalBinIndex_lt
+    {m : ℕ} {B : ℝ} {v : Fin m → Bool}
+    (hnonneg : 0 ≤ B + wordIncrementSum collatzLogIncrement v) :
+    collatzTerminalBinIndex B v < m + ⌈B⌉₊ + 2 := by
+  have hsum := wordIncrementSum_collatz_le_length v
+  have hceil : B ≤ (⌈B⌉₊ : ℝ) := Nat.le_ceil B
+  unfold collatzTerminalBinIndex
+  rw [Nat.floor_lt hnonneg]
+  push_cast
+  linarith
+
+/-- The indicator of a literal full-word barrier/bin event is nonnegative. -/
+theorem collatzFullBarrierBinIndicator_nonneg
+    {m : ℕ} (B q : ℝ) (v : Fin m → Bool) :
+    0 ≤ collatzFullBarrierBinIndicator B q v := by
+  classical
+  unfold collatzFullBarrierBinIndicator
+  split <;> norm_num
+
+/-- Survival mass is covered by the finite sum of canonical terminal bins. -/
+theorem collatzSurvivalMass_le_fullWordBins
+    {m Q : ℕ} {B : ℝ}
+    (hQ : m + ⌈B⌉₊ + 2 ≤ Q) :
+    weightedSurvivalWordMass (1 / 2) collatzLogIncrement (-B) m 0 ≤
+      ∑ q ∈ Finset.range Q,
+        collatzFullWordMass (1 / 2) m B (q : ℝ) := by
+  classical
+  unfold weightedSurvivalWordMass collatzFullWordMass
+  rw [Finset.sum_comm]
+  apply Finset.sum_le_sum
+  intro v _hv
+  by_cases hsurv : wordSurvivesFrom (-B) collatzLogIncrement m 0 v
+  · have hterminal := wordSurvivesFrom_terminal hsurv
+    have hnonneg : 0 ≤ B + wordIncrementSum collatzLogIncrement v := by
+      linarith
+    have hindex := collatzTerminalBinIndex_lt hnonneg
+    have hindexQ : collatzTerminalBinIndex B v ∈ Finset.range Q := by
+      simp only [Finset.mem_range]
+      omega
+    have hevent := collatzFullBarrierBinEvent_at_index hsurv
+    calc
+      bernoulliWordWeight (1 / 2) v *
+          (if wordSurvivesFrom (-B) collatzLogIncrement m 0 v then 1 else 0) =
+          bernoulliWordWeight (1 / 2) v *
+            collatzFullBarrierBinIndicator B (collatzTerminalBinIndex B v) v := by
+        simp [hsurv, collatzFullBarrierBinIndicator, hevent]
+      _ ≤ ∑ q ∈ Finset.range Q,
+          bernoulliWordWeight (1 / 2) v *
+            collatzFullBarrierBinIndicator B (q : ℝ) v := by
+        exact Finset.single_le_sum
+          (f := fun q : ℕ => bernoulliWordWeight (1 / 2) v *
+            collatzFullBarrierBinIndicator B (q : ℝ) v)
+          (fun q _hq => mul_nonneg
+            (bernoulliWordWeight_nonneg (by norm_num) (by norm_num) v)
+            (collatzFullBarrierBinIndicator_nonneg B (q : ℝ) v))
+          hindexQ
+  · simp only [hsurv, if_false, mul_zero]
+    exact Finset.sum_nonneg fun q _hq =>
+      mul_nonneg
+        (bernoulliWordWeight_nonneg (by norm_num) (by norm_num) v)
+        (collatzFullBarrierBinIndicator_nonneg B (q : ℝ) v)
+
+/-- Finite set of lower-barrier-surviving Boolean words. -/
+noncomputable def collatzSurvivalWords (m : ℕ) (B : ℝ) :
+    Finset (Fin m → Bool) := by
+  classical
+  exact Finset.univ.filter
+    (wordSurvivesFrom (-B) collatzLogIncrement m 0)
+
+/-- At fair weight, normalized survivor cardinality is exactly survivor
+mass. -/
+theorem weightedSurvivalWordMass_half_eq_card
+    (m : ℕ) (B : ℝ) :
+    weightedSurvivalWordMass (1 / 2) collatzLogIncrement (-B) m 0 =
+      ((collatzSurvivalWords m B).card : ℝ) / (2 : ℝ) ^ m := by
+  classical
+  unfold weightedSurvivalWordMass collatzSurvivalWords
+  rw [show (∑ v : Fin m → Bool,
+      bernoulliWordWeight (1 / 2) v *
+        (if wordSurvivesFrom (-B) collatzLogIncrement m 0 v then 1 else 0)) =
+      ∑ v : Fin m → Bool,
+        if wordSurvivesFrom (-B) collatzLogIncrement m 0 v then
+          (1 / 2 : ℝ) ^ m else 0 by
+    apply Finset.sum_congr rfl
+    intro v _hv
+    rw [bernoulliWordWeight_half_eq]
+    split <;> simp_all]
+  rw [← Finset.sum_filter]
+  simp only [Finset.sum_const, nsmul_eq_mul]
+  rw [one_div, inv_pow]
+  field_simp
+
+/-- Surviving residue classes in one complete parity block. -/
+noncomputable def collatzSurvivalResidues (m : ℕ) (B : ℝ) :
+    Finset (Fin (2 ^ m)) := by
+  classical
+  exact Finset.univ.filter (fun x =>
+    wordSurvivesFrom (-B) collatzLogIncrement m 0 (boolParityCode m x))
+
+/-- The parity equivalence restricted to surviving words. -/
+noncomputable def collatzSurvivalResidueEquiv (m : ℕ) (B : ℝ) :
+    {x : Fin (2 ^ m) //
+      wordSurvivesFrom (-B) collatzLogIncrement m 0 (boolParityCode m x)} ≃
+      {v : Fin m → Bool //
+        wordSurvivesFrom (-B) collatzLogIncrement m 0 v} :=
+  (boolParityEquiv m).subtypeEquiv (fun x => by
+    rw [boolParityEquiv_apply])
+
+theorem card_collatzSurvivalResidues (m : ℕ) (B : ℝ) :
+    (collatzSurvivalResidues m B).card =
+      (collatzSurvivalWords m B).card := by
+  classical
+  unfold collatzSurvivalResidues collatzSurvivalWords
+  rw [← Fintype.card_subtype (fun x : Fin (2 ^ m) =>
+        wordSurvivesFrom (-B) collatzLogIncrement m 0 (boolParityCode m x)),
+      ← Fintype.card_subtype
+        (wordSurvivesFrom (-B) collatzLogIncrement m 0)]
+  exact Fintype.card_congr (collatzSurvivalResidueEquiv m B)
+
+/-- Surviving parity words realized by sources in one dyadic shell. -/
+noncomputable def collatzSurvivalShell (m : ℕ) (B : ℝ) : Finset ℕ := by
+  classical
+  exact (dyadicShell m).filter (fun x =>
+    wordSurvivesFrom (-B) collatzLogIncrement m 0 (boolParityWord m x))
+
+/-- Exact parity coding identifies shell survivors with abstract word
+survivors. -/
+theorem card_collatzSurvivalShell (m : ℕ) (B : ℝ) :
+    (collatzSurvivalShell m B).card =
+      (collatzSurvivalWords m B).card := by
+  classical
+  have heq : collatzSurvivalShell m B =
+      (dyadicShell m).filter (fun n =>
+        (⟨n % (2 ^ m), Nat.mod_lt _ (pow_pos (by omega) _)⟩ :
+          Fin (2 ^ m)) ∈ collatzSurvivalResidues m B) := by
+    ext n
+    simp only [collatzSurvivalShell, collatzSurvivalResidues,
+      Finset.mem_filter, Finset.mem_univ, true_and]
+    exact and_congr_right (fun _ => by
+      rw [boolParityCode_eq_word, boolParityWord_mod])
+  rw [heq, card_dyadicShell_filter_mod_mem,
+    card_collatzSurvivalResidues]
 
 /-- Odd count depends only on the first `m` residue bits. -/
 theorem oddCount_eq_of_modEq {m n n' : ℕ}
@@ -398,6 +769,119 @@ noncomputable def timeoutShellBad (K₀ : ℝ) (L m : ℕ) : Finset ℕ := by
   classical
   exact (dyadicShell m).filter (LowStageTimeout K₀ L m)
 
+/-- Literal low-stage timeout sources are contained in the corresponding
+uniform finite-word barrier event. -/
+theorem timeoutShellBad_subset_collatzSurvivalShell
+    {K₀ C : ℝ} {L m : ℕ}
+    (hK₀ : 0 ≤ K₀) (hL : 0 < L)
+    (hmC : (m : ℝ) ≤ C * (L : ℝ))
+    (hq : timeoutTargetRank K₀ L m ≤ m) :
+    timeoutShellBad K₀ L m ⊆
+      collatzSurvivalShell m ((C * K₀ / 2 + 3) * Real.log 2) := by
+  intro x hx
+  simp only [timeoutShellBad, collatzSurvivalShell,
+    Finset.mem_filter] at hx ⊢
+  exact ⟨hx.1,
+    timeout_word_survives_uniform_barrier hK₀ hL hmC hx.1 hx.2 hq⟩
+
+/-- Exact finite ballot timeout estimate on every low-rank window.  This is
+the formal shell-level form of the manuscript's `m^{-3/2}` improvement,
+before absorbing the fixed barrier into the implied constant. -/
+theorem exists_timeoutShellBad_ballot_ratio_le :
+    ∃ C₀ : ℝ, 0 < C₀ ∧
+      ∀ K₀ C : ℝ, ∀ L m : ℕ,
+        0 ≤ K₀ → 0 ≤ C → 0 < L → L ≤ m →
+        (m : ℝ) ≤ C * (L : ℝ) →
+        timeoutTargetRank K₀ L m ≤ m → 8 ≤ m →
+        ((timeoutShellBad K₀ L m).card : ℝ) / (2 : ℝ) ^ m ≤
+          C₀ * (((C * K₀ / 2 + 3) * Real.log 2) + 1) /
+              ((m : ℝ) * Real.sqrt m) *
+            Real.exp (-(collatzFairTiltRate * (m : ℝ)) +
+              collatzTiltLambda * ((C * K₀ / 2 + 3) * Real.log 2)) := by
+  obtain ⟨C₀, hC₀, hBallot⟩ :=
+    exists_sum_collatzQuarterSplitFullWordMass_le
+  refine ⟨C₀, hC₀, ?_⟩
+  intro K₀ C L m hK₀ hC hL _hLm hmC hq hm
+  let B := (C * K₀ / 2 + 3) * Real.log 2
+  let Q := m + ⌈B⌉₊ + 2
+  have hB : 0 ≤ B := by
+    dsimp [B]
+    positivity
+  have hsubset := timeoutShellBad_subset_collatzSurvivalShell
+    hK₀ hL hmC hq
+  have hcard : (timeoutShellBad K₀ L m).card ≤
+      (collatzSurvivalShell m B).card := by
+    exact Finset.card_le_card hsubset
+  have hcardR : ((timeoutShellBad K₀ L m).card : ℝ) ≤
+      (collatzSurvivalShell m B).card := by exact_mod_cast hcard
+  have hpow : 0 < (2 : ℝ) ^ m := by positivity
+  calc
+    ((timeoutShellBad K₀ L m).card : ℝ) / (2 : ℝ) ^ m ≤
+        ((collatzSurvivalShell m B).card : ℝ) / (2 : ℝ) ^ m := by
+      exact div_le_div_of_nonneg_right hcardR hpow.le
+    _ = weightedSurvivalWordMass (1 / 2) collatzLogIncrement (-B) m 0 := by
+      rw [card_collatzSurvivalShell,
+        weightedSurvivalWordMass_half_eq_card]
+    _ ≤ ∑ q ∈ Finset.range Q,
+        collatzFullWordMass (1 / 2) m B (q : ℝ) := by
+      exact collatzSurvivalMass_le_fullWordBins (le_refl Q)
+    _ ≤ C₀ * (B + 1) / ((m : ℝ) * Real.sqrt m) *
+          Real.exp (-(collatzFairTiltRate * (m : ℝ)) +
+            collatzTiltLambda * B) := hBallot m Q B hm hB
+    _ = C₀ * (((C * K₀ / 2 + 3) * Real.log 2) + 1) /
+              ((m : ℝ) * Real.sqrt m) *
+            Real.exp (-(collatzFairTiltRate * (m : ℝ)) +
+              collatzTiltLambda * ((C * K₀ / 2 + 3) * Real.log 2)) := by
+      rfl
+
+/-- The finite-word change-of-measure rate is exactly the endpoint entropy
+rate already used by the first-passage parameter layer. -/
+theorem collatzFairTiltRate_eq_firstPassageEndpointRate :
+    collatzFairTiltRate = firstPassageEndpointRate := by
+  rw [collatzFairTiltRate_eq_entropy, firstPassageEndpointRate,
+    binaryBarrierRate, endpoint_probability_eq_logThreeTwo]
+  rfl
+
+/-- Fixed-parameter form of the ballot timeout estimate.  The barrier and
+terminal-bin constants are absorbed once `K₀` and the low-window multiplier
+`C` are fixed. -/
+theorem exists_timeoutShellBad_ballot_fixed_constant
+    (K₀ C : ℝ) (hK₀ : 0 ≤ K₀) (hC : 0 ≤ C) :
+    ∃ D : ℝ, 0 < D ∧
+      ∀ L m : ℕ,
+        0 < L → L ≤ m → (m : ℝ) ≤ C * (L : ℝ) →
+        timeoutTargetRank K₀ L m ≤ m → 8 ≤ m →
+        ((timeoutShellBad K₀ L m).card : ℝ) / (2 : ℝ) ^ m ≤
+          D / ((m : ℝ) * Real.sqrt m) *
+            Real.exp (-(firstPassageEndpointRate * (m : ℝ))) := by
+  obtain ⟨C₀, hC₀, hRaw⟩ := exists_timeoutShellBad_ballot_ratio_le
+  let B := (C * K₀ / 2 + 3) * Real.log 2
+  let D := C₀ * (B + 1) * Real.exp (collatzTiltLambda * B)
+  have hB : 0 ≤ B := by
+    dsimp [B]
+    positivity
+  have hD : 0 < D := by
+    dsimp [D]
+    positivity
+  refine ⟨D, hD, ?_⟩
+  intro L m hL hLm hmC hq hm
+  have hbound := hRaw K₀ C L m hK₀ hC hL hLm hmC hq hm
+  rw [collatzFairTiltRate_eq_firstPassageEndpointRate] at hbound
+  calc
+    ((timeoutShellBad K₀ L m).card : ℝ) / (2 : ℝ) ^ m ≤
+        C₀ * (B + 1) / ((m : ℝ) * Real.sqrt m) *
+          Real.exp (-(firstPassageEndpointRate * (m : ℝ)) +
+            collatzTiltLambda * B) := by simpa [B] using hbound
+    _ = D / ((m : ℝ) * Real.sqrt m) *
+          Real.exp (-(firstPassageEndpointRate * (m : ℝ))) := by
+      rw [show -(firstPassageEndpointRate * (m : ℝ)) +
+          collatzTiltLambda * B =
+          collatzTiltLambda * B +
+            -(firstPassageEndpointRate * (m : ℝ)) by ring,
+        Real.exp_add]
+      dsimp [D]
+      ring
+
 /-- Every literal timeout lies in the exact terminal binomial upper tail. -/
 theorem timeoutShellBad_subset_terminalOddUpperShell
     (K₀ : ℝ) (L m : ℕ) :
@@ -488,11 +972,12 @@ theorem exists_card_timeoutShellBad_sharp_le :
         firstPassageEndpointDisplacement / 2 := by
       unfold timeoutEndpointT₀
       linarith [firstPassageEndpointDisplacement_pos]
-    rw [mul_comm]
-    have hsum : 1 / 2 + timeoutEndpointT₀ ≤
+    have ht₀' : 1 / 2 + timeoutEndpointT₀ ≤
         1 / 2 + firstPassageEndpointDisplacement / 2 := by
-      linarith
-    exact (le_div_iff₀ hmR).1 (hsum.trans hratioLower)
+      simpa [add_comm] using add_le_add_left ht₀ (1 / 2)
+    rw [mul_comm]
+    exact (le_div_iff₀ hmR).1
+      (ht₀'.trans hratioLower)
   have hk : 0 < k := by
     have hpositive : 0 < (m : ℝ) * (1 / 2 + timeoutEndpointT₀) := by
       exact mul_pos hmR (by linarith [timeoutEndpointT₀_pos])

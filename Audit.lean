@@ -1,8 +1,0 @@
-import Solution
-
-/-! Axiom reports for the four declarations compared by Palomar. -/
-
-#print axioms CollatzFirstPassage.moving_polylogarithmic_natural_density_descent
-#print axioms CollatzFirstPassage.polylogarithmic_natural_density_descent
-#print axioms CollatzFirstPassage.stretched_logarithmic_descent_with_orbit_ceiling
-#print axioms CollatzFirstPassage.stretched_logarithmic_quantitative_exceptional_count

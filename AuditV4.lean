@@ -1,0 +1,8 @@
+import SolutionV4
+
+/-! Axiom reports for the four strengthened declarations compared by Palomar. -/
+
+#print axioms CollatzFirstPassage.critical_polylogarithmic_descent_with_arbitrary_multipliers
+#print axioms CollatzFirstPassage.fixed_polylogarithmic_common_landing_centered_clocks_exact_rate
+#print axioms CollatzFirstPassage.eventually_fixedJointPolylogHeightFailureCount_ge_log_order
+#print axioms CollatzFirstPassage.stretchedLogCommonLandingWithRelativeHeightQuantitative

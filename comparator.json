@@ -1,11 +1,11 @@
 {
   "challenge_module": "Challenge",
-  "solution_module": "Solution",
+  "solution_module": "SolutionV4",
   "theorem_names": [
-    "CollatzFirstPassage.moving_polylogarithmic_natural_density_descent",
-    "CollatzFirstPassage.polylogarithmic_natural_density_descent",
-    "CollatzFirstPassage.stretched_logarithmic_descent_with_orbit_ceiling",
-    "CollatzFirstPassage.stretched_logarithmic_quantitative_exceptional_count"
+    "CollatzFirstPassage.critical_polylogarithmic_descent_with_arbitrary_multipliers",
+    "CollatzFirstPassage.fixed_polylogarithmic_common_landing_centered_clocks_exact_rate",
+    "CollatzFirstPassage.eventually_fixedJointPolylogHeightFailureCount_ge_log_order",
+    "CollatzFirstPassage.stretchedLogCommonLandingWithRelativeHeightQuantitative"
   ],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],

@@ -21,7 +21,7 @@ if [ "$challenge_sorries" != "4" ]; then
   exit 1
 fi
 
-lake build FirstPassageLinearTransport Solution Audit
+lake build FirstPassageLinearTransport Challenge SolutionV4 AuditV4
 git diff --check
 
 echo "submission preflight passed"

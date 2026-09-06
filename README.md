@@ -40,13 +40,13 @@ multiple of the pure critical target `(log n)^A_FP`.
 
 - [`Challenge.lean`](Challenge.lean) is the Mathlib-only statement surface. Its
   four `sorry`s are deliberate and excluded from proof-status counts.
-- [`SolutionV4.lean`](SolutionV4.lean) states the same four declarations and
+- [`Solution.lean`](Solution.lean) states the same four declarations and
   reduces them to the completed project proofs.
 - [`FirstPassageLinearTransport/`](FirstPassageLinearTransport/) contains the
   substantive Lean proof modules.
 - [`comparator.json`](comparator.json) selects the four Version 4 declarations
   and enables NanoDa replay.
-- [`AuditV4.lean`](AuditV4.lean) prints the selected declarations' axiom
+- [`Audit.lean`](Audit.lean) prints the selected declarations' axiom
   dependencies.
 - [`formalization.yaml`](formalization.yaml) records scope, paper alignment,
   fidelity boundaries, authorship, automation, and review status.

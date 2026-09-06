@@ -79,7 +79,7 @@ related_formalizations:
       This repository and commit are the authoritative substantive source for
       the canonical Version 4 release. This registry-facing repository contains
       the substantive selected proof cone ported to Lean 4.33.0 and adds the
-      synchronized Challenge, SolutionV4, Comparator, audit, and metadata
+      synchronized Challenge, Solution, Comparator, audit, and metadata
       surface.
   - id: "https://palomar-registry.org/entry?id=PALOMAR-2026-08-26-000005&version=3"
     relationship: "builds-on"
@@ -116,25 +116,25 @@ status:
   axioms: ["propext", "Classical.choice", "Quot.sound"]
   main_results:
     - declaration: "CollatzFirstPassage.critical_polylogarithmic_descent_with_arbitrary_multipliers"
-      file: "SolutionV4.lean"
+      file: "Solution.lean"
       sorry_count: 0
       axioms: ["propext", "Classical.choice", "Quot.sound"]
       comparator_config: "comparator.json"
       literature_dependencies: []
     - declaration: "CollatzFirstPassage.fixed_polylogarithmic_common_landing_centered_clocks_exact_rate"
-      file: "SolutionV4.lean"
+      file: "Solution.lean"
       sorry_count: 0
       axioms: ["propext", "Classical.choice", "Quot.sound"]
       comparator_config: "comparator.json"
       literature_dependencies: []
     - declaration: "CollatzFirstPassage.eventually_fixedJointPolylogHeightFailureCount_ge_log_order"
-      file: "SolutionV4.lean"
+      file: "Solution.lean"
       sorry_count: 0
       axioms: ["propext", "Classical.choice", "Quot.sound"]
       comparator_config: "comparator.json"
       literature_dependencies: []
     - declaration: "CollatzFirstPassage.stretchedLogCommonLandingWithRelativeHeightQuantitative"
-      file: "SolutionV4.lean"
+      file: "Solution.lean"
       sorry_count: 0
       axioms: ["propext", "Classical.choice", "Quot.sound"]
       comparator_config: "comparator.json"
@@ -183,7 +183,7 @@ fidelity:
     ceilings; it does not expose the endpoint rate or arbitrary clock
     coefficients. The pure fixed-multiplier critical target and all pointwise
     Collatz conclusions remain outside the theorem surface. Challenge.lean and
-    SolutionV4.lean use definitionally equal namespace-local definitions. The
+    Solution.lean use definitionally equal namespace-local definitions. The
     preceding Solution/Audit surface and its unselected dependencies remain in
     immutable Git history and the earlier Palomar record rather than in this
     Version 4 release cone.
@@ -208,7 +208,7 @@ alignment:
         declaration
         FirstPassageLinearTransport.critical_polylogarithmic_descent_with_arbitrary_multipliers
       lean: "CollatzFirstPassage.critical_polylogarithmic_descent_with_arbitrary_multipliers"
-      module: "SolutionV4"
+      module: "Solution"
       status: "proved"
       note: >-
         Exposes arbitrary positive divergent multipliers without a monotonicity
@@ -220,7 +220,7 @@ alignment:
         Version 4 Corollary 1.2(1); source declaration
         FirstPassageLinearTransport.fixed_polylogarithmic_common_landing_centered_clocks_exact_rate
       lean: "CollatzFirstPassage.fixed_polylogarithmic_common_landing_centered_clocks_exact_rate"
-      module: "SolutionV4"
+      module: "Solution"
       status: "proved"
       note: >-
         Exposes the exact endpoint upper rate q = kappa_* A - 1/2, common
@@ -232,7 +232,7 @@ alignment:
         declaration
         FirstPassageLinearTransport.eventually_fixedJointPolylogHeightFailureCount_ge_log_order
       lean: "CollatzFirstPassage.eventually_fixedJointPolylogHeightFailureCount_ge_log_order"
-      module: "SolutionV4"
+      module: "Solution"
       status: "proved"
       note: >-
         Gives an explicit eventual lower bound of reciprocal logarithmic order
@@ -244,7 +244,7 @@ alignment:
         projection; source declaration
         FirstPassageLinearTransport.stretchedLogCommonLandingWithRelativeHeightQuantitative
       lean: "CollatzFirstPassage.stretchedLogCommonLandingWithRelativeHeightQuantitative"
-      module: "SolutionV4"
+      module: "Solution"
       status: "proved"
       note: >-
         Exposes every strict 0 < sigma < 1-delta, a common shortcut/raw

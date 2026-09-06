@@ -1,4 +1,4 @@
-import SolutionV4
+import Solution
 
 /-! Axiom reports for the four strengthened declarations compared by Palomar. -/
 

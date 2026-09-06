@@ -99,6 +99,13 @@ scope map is in [`formalization.yaml`](formalization.yaml).
 
 - persistent preprint/citation record:
   [SSRN Paper 7290240](https://doi.org/10.2139/ssrn.7290240);
+- immutable Version 4 manuscript:
+  [Zenodo DOI 10.5281/zenodo.22525724](https://doi.org/10.5281/zenodo.22525724);
+- canonical Version 4 Lean release:
+  [tag `lean-v4.0.0`](https://github.com/shaikidris/FirstPassageLinearTransport/tree/lean-v4.0.0)
+  at commit `a419e012be2aeb735387385a711c211651ccf527`;
+- immutable Version 4 software archive:
+  [Zenodo DOI 10.5281/zenodo.22525757](https://doi.org/10.5281/zenodo.22525757);
 - preceding immutable manuscript version:
   [Zenodo Version 3.2.4](https://doi.org/10.5281/zenodo.22130385);
 - preceding software archive:
@@ -106,17 +113,21 @@ scope map is in [`formalization.yaml`](formalization.yaml).
 - preceding registered verification:
   [PALOMAR-2026-08-26-000005 version 3](https://palomar-registry.org/entry?id=PALOMAR-2026-08-26-000005&version=3).
 
-Those preceding records do not verify the Version 4 additions. This candidate
-must receive a fresh public source release and a fresh Palomar mechanical and
-editorial replay before a new version is registered.
+The Version 4 manuscript, source release, and software archive are public.
+They do not replace Palomar verification: this candidate still requires a
+fresh mechanical and editorial replay before a new registry version is
+registered.
 
 ## Provenance and AI disclosure
 
 The preceding proof cone was based on the public `lean-v3.2.0` release at
-commit `ef3410843bf58d69f771f5ba2c0571d54b54da59`. The Version 4 candidate adds
-the finite-ballot endpoint, centered-clock and first-passage consequences,
-joint height obstruction, and stretched relative-height development. The
-selected package is checked with Lean 4.33.0.
+commit `ef3410843bf58d69f771f5ba2c0571d54b54da59`. The canonical Version 4
+development is frozen at tag `lean-v4.0.0`, commit
+`a419e012be2aeb735387385a711c211651ccf527`, and adds the finite-ballot
+endpoint, centered-clock and first-passage consequences, joint height
+obstruction, and stretched relative-height development. The canonical release
+uses Lean 4.15.0; this registry-facing port is separately checked with Lean
+4.33.0.
 
 OpenAI Codex assisted with proof exploration, Lean construction and diagnosis,
 dependency-cone work, statement alignment, audits, and package preparation.

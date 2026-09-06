@@ -1,6 +1,6 @@
 {
   "challenge_module": "Challenge",
-  "solution_module": "SolutionV4",
+  "solution_module": "Solution",
   "theorem_names": [
     "CollatzFirstPassage.critical_polylogarithmic_descent_with_arbitrary_multipliers",
     "CollatzFirstPassage.fixed_polylogarithmic_common_landing_centered_clocks_exact_rate",

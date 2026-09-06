@@ -10,7 +10,7 @@ Before opening a pull request:
 
 1. Keep `Challenge.lean` a small Mathlib-only statement surface with exactly
    four deliberate `sorry`s, one for each selected declaration.
-2. Keep the corresponding completed proof in `SolutionV4.lean` and update
+2. Keep the corresponding completed proof in `Solution.lean` and update
    `comparator.json` if the advertised declaration surface changes.
 3. Record any source-fidelity or toolchain change in `SOURCE_PROVENANCE.md` and
    `formalization.yaml`.

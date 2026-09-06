@@ -77,7 +77,7 @@ dependencies:
 - `StretchedRelativeHeight.lean` for the smaller common height ceiling in the
   stretched-logarithmic result.
 
-The selected reader-facing roots are imported by `SolutionV4.lean`. Their
+The selected reader-facing roots are imported by `Solution.lean`. Their
 exact statements are duplicated in the Mathlib-only `Challenge.lean` and
 matched by `comparator.json`.
 
@@ -92,7 +92,7 @@ those porting edits.
 
 ## Selected-surface fidelity
 
-`SolutionV4.lean` reduces its four declarations to:
+`Solution.lean` reduces its four declarations to:
 
 - `FirstPassageLinearTransport.critical_polylogarithmic_descent_with_arbitrary_multipliers`;
 - `FirstPassageLinearTransport.fixed_polylogarithmic_common_landing_centered_clocks_exact_rate`;
@@ -109,14 +109,14 @@ recorded in `formalization.yaml` and are not promoted silently.
 
 The proof development outside `Challenge.lean` contains no `sorry`, `admit`,
 or project-specific `axiom`. `Challenge.lean` contains four deliberate
-`sorry`s required by the Comparator workflow. `AuditV4.lean` is expected to
+`sorry`s required by the Comparator workflow. `Audit.lean` is expected to
 report only `propext`, `Classical.choice`, and `Quot.sound` for all selected
 declarations.
 
 The preceding Solution/Audit surface and its unreachable dependencies remain
 available at its immutable Git commit and Palomar record rather than being
 copied into this release cone. The current Comparator and default Lake targets
-use `SolutionV4` and `AuditV4`. The strengthened candidate requires its own
+use `Solution` and `Audit`. The strengthened candidate requires its own
 local full build and a fresh independent Comparator/Landrun/NanoDa replay. No
 earlier Palomar review is treated as verification of the Version 4 additions.
 

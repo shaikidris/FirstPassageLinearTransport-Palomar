@@ -1,6 +1,6 @@
 name = "FirstPassageLinearTransportPalomar"
 version = "0.4.0"
-defaultTargets = ["FirstPassageLinearTransport", "Challenge", "SolutionV4", "AuditV4"]
+defaultTargets = ["FirstPassageLinearTransport", "Challenge", "Solution", "Audit"]
 
 [[require]]
 name = "mathlib"
@@ -15,9 +15,9 @@ name = "Challenge"
 roots = ["Challenge"]
 
 [[lean_lib]]
-name = "SolutionV4"
-roots = ["SolutionV4"]
+name = "Solution"
+roots = ["Solution"]
 
 [[lean_lib]]
-name = "AuditV4"
-roots = ["AuditV4"]
+name = "Audit"
+roots = ["Audit"]

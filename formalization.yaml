@@ -14,10 +14,12 @@ project:
     common-landing theorem with smaller relative-height ceilings. These are
     almost-all statements and do not prove pointwise Collatz convergence.
   authors:
-    - "Idris Ali Shaik (ORCID 0009-0009-9699-9712)"
+    - name: "Idris Ali Shaik"
+      orcid: "0009-0009-9699-9712"
   license: "Apache-2.0"
   responsible_maintainers:
-    - "Idris Ali Shaik (ORCID 0009-0009-9699-9712)"
+    - name: "Idris Ali Shaik"
+      orcid: "0009-0009-9699-9712"
 
 repository:
   role: "substantive-development"

@@ -197,6 +197,70 @@ theorem TimeoutRecertificationRun.currentRank_pos
       hgap =>
       exact hqpos
 
+/-- The final rank of a timeout run was produced either by a certified high
+block whose parent lies above the switch, or by a timeout block whose parent
+lies above the terminal rank.  Only the last constructor matters. -/
+theorem TimeoutRecertificationRun.currentRank_high_or_low
+    {P : TimeoutHighRunData} {K₀ : ℝ} {L M S n elapsed q : ℕ}
+    (hrun : TimeoutRecertificationRun P K₀ L M S n elapsed q) :
+    (∃ m : ℕ, S ≤ m ∧ q = rationalTargetRank P.rHi m) ∨
+      (∃ m : ℕ, L ≤ m ∧ q = timeoutTargetRank K₀ L m) := by
+  cases hrun with
+  | first hSM hM0 hnShell hnGood =>
+      exact Or.inl ⟨M, hSM, rfl⟩
+  | nextHi hrun hSm hm0 hmPrev hsourceShell hsourceGood hgap =>
+      exact Or.inl ⟨_, hSm, rfl⟩
+  | nextLo hrun hmS hLm hmPrevLo hmPrevHi hsourceShell hpass hqpos
+      hqparent hgap =>
+      exact Or.inr ⟨_, hLm, rfl⟩
+
+/-- A high/low run cannot finish at a bounded rank once both the switch and
+terminal ranks are large.  This finite lemma is the rank interface needed to
+make the final reverse product uniformly positive. -/
+theorem TimeoutRecertificationRun.currentRank_ge
+    {P : TimeoutHighRunData} {K₀ : ℝ} {L M S n elapsed q Q : ℕ}
+    (hHigh : (Q : ℝ) ≤ (P.rHi : ℝ) * (S : ℝ))
+    (hLowRatio : (1 / 2 : ℝ) ≤ movingLowRatio K₀ L)
+    (hQL : 2 * Q ≤ L)
+    (hrun : TimeoutRecertificationRun P K₀ L M S n elapsed q) :
+    Q ≤ q := by
+  rcases hrun.currentRank_high_or_low with hhigh | hlow
+  · rcases hhigh with ⟨m, hSm, rfl⟩
+    apply Nat.le_floor
+    have hr0 : (0 : ℝ) ≤ (P.rHi : ℝ) := P.pHi.r_pos.le
+    have hSmR : (S : ℝ) ≤ (m : ℝ) := by exact_mod_cast hSm
+    exact hHigh.trans (mul_le_mul_of_nonneg_left hSmR hr0)
+  · rcases hlow with ⟨m, hLm, rfl⟩
+    have hQ : (Q : ℝ) ≤ (1 / 2 : ℝ) * (L : ℝ) := by
+      have hQLR : (2 : ℝ) * (Q : ℝ) ≤ (L : ℝ) := by
+        exact_mod_cast hQL
+      linarith
+    have hLmR : (L : ℝ) ≤ (m : ℝ) := by exact_mod_cast hLm
+    have hratio0 : 0 ≤ movingLowRatio K₀ L := by linarith
+    have htarget : (Q : ℝ) ≤ movingLowRatio K₀ L * (m : ℝ) := by
+      calc
+        (Q : ℝ) ≤ (1 / 2 : ℝ) * (L : ℝ) := hQ
+        _ ≤ movingLowRatio K₀ L * (L : ℝ) := by
+          exact mul_le_mul_of_nonneg_right hLowRatio (Nat.cast_nonneg L)
+        _ ≤ movingLowRatio K₀ L * (m : ℝ) :=
+          mul_le_mul_of_nonneg_left hLmR hratio0
+    simpa [timeoutTargetRank] using (Nat.le_floor htarget)
+
+/-- Every later timeout-run rank lies below the rank reached by the initial
+high block.  This is the rank interface used to keep all post-initial
+certified blocks below the original scale. -/
+theorem TimeoutRecertificationRun.currentRank_le_initialRank
+    {P : TimeoutHighRunData} {K₀ : ℝ} {L M S n elapsed q : ℕ}
+    (hrun : TimeoutRecertificationRun P K₀ L M S n elapsed q) :
+    q ≤ rationalTargetRank P.rHi M := by
+  induction hrun with
+  | first hSM hM0 hnShell hnGood => exact le_rfl
+  | nextHi hrun hSm hm0 hmPrev hsourceShell hsourceGood hgap ih =>
+      exact hgap.le.trans ih
+  | nextLo hrun hmS hLm hmPrevLo hmPrevHi hsourceShell hpass hqpos
+      hqparent hgap ih =>
+      exact hgap.le.trans ih
+
 /-- Every literal timeout run is the direct first passage of the original
 source through its final threshold. -/
 theorem TimeoutRecertificationRun.directFirstPassage

@@ -50,6 +50,24 @@ theorem shrinkingSwitchRank_pos
     linarith
   exact mul_pos hC (Real.log_pos hx)
 
+/-- A positive linear-logarithmic switch rank tends to infinity. -/
+theorem tendsto_shrinkingSwitchRank_atTop
+    {C : ℝ} (hC : 0 < C) :
+    Tendsto (shrinkingSwitchRank C) atTop atTop := by
+  have hxT : Tendsto (fun M : ℕ => (M : ℝ) + 2) atTop atTop :=
+    tendsto_atTop_add_const_right atTop (2 : ℝ)
+      tendsto_natCast_atTop_atTop
+  have hlogT : Tendsto (fun M : ℕ => Real.log ((M : ℝ) + 2))
+      atTop atTop := Real.tendsto_log_atTop.comp hxT
+  have hreal : Tendsto
+      (fun M : ℕ => C * Real.log ((M : ℝ) + 2)) atTop atTop :=
+    hlogT.const_mul_atTop hC
+  rw [tendsto_atTop]
+  intro N
+  have hN := (tendsto_atTop.1 hreal) (N : ℝ)
+  filter_upwards [hN] with M hN
+  exact_mod_cast hN.trans (shrinkingSwitchRank_lower C M)
+
 
 /-- A linear-log switch is eventually below the source shell. -/
 theorem eventually_shrinkingSwitchRank_lt_source
@@ -81,9 +99,8 @@ theorem eventually_shrinkingSwitchRank_lt_source
         calc
           C * Real.log ((M : ℝ) + 2) + 1 ≤
               C * (1 / (2 * (C + 1)) * ((M : ℝ) + 2)) + 1 := by
-            simpa [add_comm] using add_le_add_right hmul 1
-          _ = C * ((M : ℝ) + 2) / (2 * (C + 1)) + 1 := by
-            field_simp [ne_of_gt (by positivity : (0 : ℝ) < 2 * (C + 1))]
+            linarith
+          _ = C * ((M : ℝ) + 2) / (2 * (C + 1)) + 1 := by ring
       _ < (M : ℝ) := by
         have hMR : (5 : ℝ) ≤ M := by exact_mod_cast hM
         have hC1 : 0 < C + 1 := by linarith

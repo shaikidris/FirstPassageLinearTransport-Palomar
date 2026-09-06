@@ -97,11 +97,142 @@ def criticalRankBuffer (L : ℕ → ℕ) (M : ℕ) : ℝ :=
 def movingRankBuffer (A : ℕ → ℝ) (M : ℕ) : ℝ :=
   criticalRankBuffer (movingTerminalRank A) M
 
+/-- Version 4 critical buffer after the ballot timeout removes the former
+secondary logarithmic debit.  This is deliberately a new definition: the
+Version 3 `movingRankBuffer` API remains unchanged. -/
+def sharpMovingRankBuffer (A : ℕ → ℝ) (M : ℕ) : ℝ :=
+  firstPassageEntropyGap * movingTerminalRank A M -
+    (1 / 2) * Real.logb 2 ((M : ℝ) + 2)
+
 theorem movingRankBuffer_eq (A : ℕ → ℝ) (M : ℕ) :
     movingRankBuffer A M =
       firstPassageEntropyGap * movingTerminalRank A M -
         (1 / 2) * Real.logb 2 ((M : ℝ) + 2) -
         Real.logb 2 (Real.log ((M : ℝ) + 3)) := rfl
+
+theorem sharpMovingRankBuffer_eq (A : ℕ → ℝ) (M : ℕ) :
+    sharpMovingRankBuffer A M =
+      firstPassageEntropyGap * movingTerminalRank A M -
+        (1 / 2) * Real.logb 2 ((M : ℝ) + 2) := rfl
+
+/-- Exact exponential interpretation of the Version 4 critical buffer. -/
+theorem two_rpow_neg_sharpMovingRankBuffer_eq
+    (A : ℕ → ℝ) (M : ℕ) :
+    (2 : ℝ) ^ (-(sharpMovingRankBuffer A M)) =
+      Real.sqrt ((M : ℝ) + 2) *
+        Real.exp (-(firstPassageEndpointRate *
+          (movingTerminalRank A M : ℝ))) := by
+  let x : ℝ := (M : ℝ) + 2
+  have hx : 0 < x := by dsimp [x]; positivity
+  have htwo : 0 < (2 : ℝ) := by norm_num
+  have hfirst :
+      (2 : ℝ) ^ (-(firstPassageEntropyGap *
+          (movingTerminalRank A M : ℝ))) =
+        Real.exp (-(firstPassageEndpointRate *
+          (movingTerminalRank A M : ℝ))) := by
+    rw [Real.rpow_def_of_pos htwo]
+    rw [firstPassageEndpointRate_eq_entropyGap_mul_logTwo]
+    congr 1
+    ring
+  have hsecond :
+      (2 : ℝ) ^ ((1 / 2 : ℝ) * Real.logb 2 x) = Real.sqrt x := by
+    rw [show (1 / 2 : ℝ) * Real.logb 2 x =
+        Real.logb 2 x * (1 / 2 : ℝ) by ring,
+      Real.rpow_mul (by norm_num),
+      Real.rpow_logb (by norm_num) (by norm_num) hx,
+      Real.sqrt_eq_rpow]
+  rw [sharpMovingRankBuffer_eq]
+  rw [show -(firstPassageEntropyGap * movingTerminalRank A M -
+        (1 / 2) * Real.logb 2 ((M : ℝ) + 2)) =
+      -(firstPassageEntropyGap * (movingTerminalRank A M : ℝ)) +
+        (1 / 2) * Real.logb 2 x by
+      dsimp [x]
+      ring,
+    Real.rpow_add htwo, hfirst, hsecond]
+  dsimp [x]
+  ring
+
+/-- The Version 4 timeout scalar is paid directly by the sharp critical
+buffer.  The square-root support cost cancels against the terminal
+`L⁻¹ᐟ²` ballot prefactor. -/
+theorem sharp_timeout_scalar_le_buffer
+    {A : ℕ → ℝ} {M : ℕ}
+    (hbuf : 0 ≤ sharpMovingRankBuffer A M)
+    (hL : 1 ≤ movingTerminalRank A M) :
+    Real.sqrt (((M : ℝ) + 2) * Real.log ((M : ℝ) + 2)) *
+        (1 / Real.sqrt (movingTerminalRank A M)) *
+        Real.exp (-(firstPassageEndpointRate *
+          (movingTerminalRank A M : ℝ))) ≤
+      Real.sqrt (2 * firstPassageEndpointRate) *
+        (2 : ℝ) ^ (-(sharpMovingRankBuffer A M)) := by
+  let x : ℝ := (M : ℝ) + 2
+  let L : ℕ := movingTerminalRank A M
+  have hx1 : 1 ≤ x := by
+    dsimp [x]
+    have hM0 : (0 : ℝ) ≤ M := Nat.cast_nonneg M
+    linarith
+  have hx0 : 0 < x := zero_lt_one.trans_le hx1
+  have hL1 : 1 ≤ L := by simpa [L] using hL
+  have hLR : 0 < (L : ℝ) := by positivity
+  have hlogbBound : Real.logb 2 x ≤
+      2 * firstPassageEntropyGap * (L : ℝ) := by
+    rw [sharpMovingRankBuffer_eq] at hbuf
+    dsimp [x, L] at hbuf ⊢
+    linarith
+  have hlogIdentity : Real.log x = Real.log 2 * Real.logb 2 x := by
+    simp [Real.logb]
+    field_simp [ne_of_gt (Real.log_pos (by norm_num : (1 : ℝ) < 2))]
+  have hlogBound : Real.log x ≤
+      2 * firstPassageEndpointRate * (L : ℝ) := by
+    rw [hlogIdentity, firstPassageEndpointRate_eq_entropyGap_mul_logTwo]
+    have hlog2 : 0 ≤ Real.log 2 := (Real.log_pos (by norm_num)).le
+    nlinarith [mul_le_mul_of_nonneg_left hlogbBound hlog2]
+  have hsqrtLog : Real.sqrt (Real.log x) ≤
+      Real.sqrt (2 * firstPassageEndpointRate * (L : ℝ)) :=
+    Real.sqrt_le_sqrt hlogBound
+  have hsqrtXL : Real.sqrt (x * Real.log x) ≤
+      Real.sqrt x * Real.sqrt (2 * firstPassageEndpointRate * (L : ℝ)) := by
+    rw [Real.sqrt_mul hx0.le]
+    gcongr
+  have hsqrtSplit :
+      Real.sqrt (2 * firstPassageEndpointRate * (L : ℝ)) =
+        Real.sqrt (2 * firstPassageEndpointRate) * Real.sqrt L := by
+    rw [Real.sqrt_mul
+      (mul_nonneg (by norm_num) firstPassageEndpointRate_pos.le)]
+  have hcancel : Real.sqrt L * (1 / Real.sqrt L) = 1 := by
+    field_simp [Real.sqrt_ne_zero'.2 hLR]
+  have hcore : Real.sqrt (x * Real.log x) * (1 / Real.sqrt L) ≤
+      Real.sqrt (2 * firstPassageEndpointRate) * Real.sqrt x := by
+    calc
+      _ ≤ (Real.sqrt x *
+          Real.sqrt (2 * firstPassageEndpointRate * (L : ℝ))) *
+          (1 / Real.sqrt L) := by
+        gcongr
+      _ = Real.sqrt (2 * firstPassageEndpointRate) * Real.sqrt x := by
+        rw [hsqrtSplit]
+        rw [show Real.sqrt x *
+            (Real.sqrt (2 * firstPassageEndpointRate) * Real.sqrt L) *
+              (1 / Real.sqrt L) =
+            Real.sqrt (2 * firstPassageEndpointRate) * Real.sqrt x *
+              (Real.sqrt L * (1 / Real.sqrt L)) by ring,
+          hcancel]
+        ring
+  have hexp0 : 0 ≤ Real.exp (-(firstPassageEndpointRate * (L : ℝ))) :=
+    Real.exp_pos _ |>.le
+  calc
+    Real.sqrt (((M : ℝ) + 2) * Real.log ((M : ℝ) + 2)) *
+          (1 / Real.sqrt (movingTerminalRank A M)) *
+          Real.exp (-(firstPassageEndpointRate *
+            (movingTerminalRank A M : ℝ))) =
+        (Real.sqrt (x * Real.log x) * (1 / Real.sqrt L)) *
+          Real.exp (-(firstPassageEndpointRate * (L : ℝ))) := by rfl
+    _ ≤ (Real.sqrt (2 * firstPassageEndpointRate) * Real.sqrt x) *
+          Real.exp (-(firstPassageEndpointRate * (L : ℝ))) := by
+      exact mul_le_mul_of_nonneg_right hcore hexp0
+    _ = Real.sqrt (2 * firstPassageEndpointRate) *
+          (2 : ℝ) ^ (-(sharpMovingRankBuffer A M)) := by
+      rw [two_rpow_neg_sharpMovingRankBuffer_eq]
+      ring
 
 /-- Exact exponential interpretation of the critical rank buffer. -/
 theorem two_rpow_neg_movingRankBuffer_eq
@@ -182,7 +313,35 @@ theorem tendsto_movingTerminalRank_atTop
     have hmul : firstPassageEntropyGap * (N : ℝ) ≤
         firstPassageEntropyGap * (movingTerminalRank A M : ℝ) :=
       hbuf.trans hupper
-    exact (mul_le_mul_iff_of_pos_left firstPassageEntropyGap_pos).mp hmul
+    exact le_of_mul_le_mul_left hmul firstPassageEntropyGap_pos
+  exact_mod_cast hcast
+
+/-- Divergence of the sharp Version 4 buffer likewise forces the integer
+terminal rank to diverge. -/
+theorem tendsto_movingTerminalRank_atTop_of_sharp
+    {A : ℕ → ℝ}
+    (hbuffer : Tendsto (sharpMovingRankBuffer A) atTop atTop) :
+    Tendsto (movingTerminalRank A) atTop atTop := by
+  rw [tendsto_atTop] at hbuffer ⊢
+  intro N
+  have hbuf := hbuffer (firstPassageEntropyGap * (N : ℝ))
+  filter_upwards [hbuf] with M hbuf
+  let x : ℝ := (M : ℝ) + 2
+  have hx1 : 1 ≤ x := by
+    dsimp [x]
+    have hM0 : (0 : ℝ) ≤ M := Nat.cast_nonneg M
+    linarith
+  have hlogb0 : 0 ≤ Real.logb 2 x :=
+    Real.logb_nonneg (by norm_num) hx1
+  have hupper : sharpMovingRankBuffer A M ≤
+      firstPassageEntropyGap * (movingTerminalRank A M : ℝ) := by
+    rw [sharpMovingRankBuffer_eq]
+    linarith
+  have hcast : (N : ℝ) ≤ (movingTerminalRank A M : ℝ) := by
+    have hmul : firstPassageEntropyGap * (N : ℝ) ≤
+        firstPassageEntropyGap * (movingTerminalRank A M : ℝ) :=
+      hbuf.trans hupper
+    exact le_of_mul_le_mul_left hmul firstPassageEntropyGap_pos
   exact_mod_cast hcast
 
 /-- The moving exponent is eventually positive whenever its critical rank
@@ -193,6 +352,23 @@ theorem eventually_movingExponent_pos
     ∀ᶠ M : ℕ in atTop, 0 < A M := by
   have hRank := (tendsto_atTop.1
     (tendsto_movingTerminalRank_atTop hbuffer)) 1
+  filter_upwards [hRank] with M hRank
+  have hceil : 0 < A M * Real.logb 2 ((M : ℝ) + 2) :=
+    Nat.ceil_pos.mp (show 0 < movingTerminalRank A M by omega)
+  have hlogb : 0 < Real.logb 2 ((M : ℝ) + 2) := by
+    apply Real.logb_pos (by norm_num : (1 : ℝ) < 2)
+    have hM0 : (0 : ℝ) ≤ M := Nat.cast_nonneg M
+    linarith
+  nlinarith
+
+/-- The exponent is eventually positive under the sharp Version 4 buffer
+hypothesis. -/
+theorem eventually_movingExponent_pos_of_sharp
+    {A : ℕ → ℝ}
+    (hbuffer : Tendsto (sharpMovingRankBuffer A) atTop atTop) :
+    ∀ᶠ M : ℕ in atTop, 0 < A M := by
+  have hRank := (tendsto_atTop.1
+    (tendsto_movingTerminalRank_atTop_of_sharp hbuffer)) 1
   filter_upwards [hRank] with M hRank
   have hceil : 0 < A M * Real.logb 2 ((M : ℝ) + 2) :=
     Nat.ceil_pos.mp (show 0 < movingTerminalRank A M by omega)
@@ -221,6 +397,98 @@ theorem eventually_movingTerminalRank_lt_shrinkingSwitchRank
     exact Nat.ceil_mono (mul_le_mul_of_nonneg_right hAM hlogb0)
   exact hceil.trans_lt hFixed
 
+/-- If the moving critical-rank buffer diverges, then the logarithmic switch
+rank is eventually bounded by a fixed multiple of the moving terminal rank.
+The multiplier depends only on the fixed switch coefficient and the endpoint
+rate, not on the moving schedule. -/
+theorem eventually_shrinkingSwitchRank_le_terminalRank_mul
+    {A : ℕ → ℝ} {C : ℝ} (hC : 0 ≤ C)
+    (hbuffer : Tendsto (movingRankBuffer A) atTop atTop) :
+    ∀ᶠ M : ℕ in atTop,
+      (shrinkingSwitchRank C M : ℝ) ≤
+        (2 * C * firstPassageEndpointRate + 1) *
+          (movingTerminalRank A M : ℝ) := by
+  have hbuf0 : ∀ᶠ M : ℕ in atTop, 0 ≤ movingRankBuffer A M :=
+    (tendsto_atTop.1 hbuffer) 0
+  have hRank := (tendsto_atTop.1
+    (tendsto_movingTerminalRank_atTop hbuffer)) 1
+  filter_upwards [hbuf0, hRank, eventually_ge_atTop (1 : ℕ)]
+    with M hbuf0 hRank hM
+  let L := movingTerminalRank A M
+  have hlog1 : 1 ≤ Real.log ((M : ℝ) + 3) := by
+    apply (Real.le_log_iff_exp_le (by positivity)).2
+    have he : Real.exp 1 < 3 := Real.exp_one_lt_d9.trans (by norm_num)
+    have hMR : (1 : ℝ) ≤ M := by exact_mod_cast hM
+    linarith
+  have hloglog0 : 0 ≤ Real.logb 2 (Real.log ((M : ℝ) + 3)) :=
+    Real.logb_nonneg (by norm_num) hlog1
+  have hlogbBound : Real.logb 2 ((M : ℝ) + 2) ≤
+      2 * firstPassageEntropyGap * (L : ℝ) := by
+    rw [movingRankBuffer_eq] at hbuf0
+    dsimp [L]
+    linarith
+  have hlogIdentity : Real.log ((M : ℝ) + 2) =
+      Real.log 2 * Real.logb 2 ((M : ℝ) + 2) := by
+    simp [Real.logb]
+    field_simp [ne_of_gt (Real.log_pos (by norm_num : (1 : ℝ) < 2))]
+  have hlogBound : Real.log ((M : ℝ) + 2) ≤
+      2 * firstPassageEndpointRate * (L : ℝ) := by
+    rw [hlogIdentity, firstPassageEndpointRate_eq_entropyGap_mul_logTwo]
+    have hlog2 : 0 ≤ Real.log 2 := (Real.log_pos (by norm_num)).le
+    nlinarith [mul_le_mul_of_nonneg_left hlogbBound hlog2]
+  have hswitch := shrinkingSwitchRank_lt_add_one hC M
+  have hL1 : (1 : ℝ) ≤ L := by exact_mod_cast hRank
+  have hmul := mul_le_mul_of_nonneg_left hlogBound hC
+  calc
+    (shrinkingSwitchRank C M : ℝ) ≤
+        C * Real.log ((M : ℝ) + 2) + 1 := hswitch.le
+    _ ≤ C * (2 * firstPassageEndpointRate * (L : ℝ)) + 1 := by
+      linarith
+    _ ≤ C * (2 * firstPassageEndpointRate * (L : ℝ)) + (L : ℝ) := by
+      linarith
+    _ = (2 * C * firstPassageEndpointRate + 1) * (L : ℝ) := by ring
+
+/-- Sharp-buffer version of the uniform low-window comparison.  Unlike the
+Version 3 route, this requires no secondary logarithmic debit. -/
+theorem eventually_shrinkingSwitchRank_le_terminalRank_mul_of_sharp
+    {A : ℕ → ℝ} {C : ℝ} (hC : 0 ≤ C)
+    (hbuffer : Tendsto (sharpMovingRankBuffer A) atTop atTop) :
+    ∀ᶠ M : ℕ in atTop,
+      (shrinkingSwitchRank C M : ℝ) ≤
+        (2 * C * firstPassageEndpointRate + 1) *
+          (movingTerminalRank A M : ℝ) := by
+  have hbuf0 : ∀ᶠ M : ℕ in atTop, 0 ≤ sharpMovingRankBuffer A M :=
+    (tendsto_atTop.1 hbuffer) 0
+  have hRank := (tendsto_atTop.1
+    (tendsto_movingTerminalRank_atTop_of_sharp hbuffer)) 1
+  filter_upwards [hbuf0, hRank] with M hbuf0 hRank
+  let L := movingTerminalRank A M
+  have hlogbBound : Real.logb 2 ((M : ℝ) + 2) ≤
+      2 * firstPassageEntropyGap * (L : ℝ) := by
+    rw [sharpMovingRankBuffer_eq] at hbuf0
+    dsimp [L]
+    linarith
+  have hlogIdentity : Real.log ((M : ℝ) + 2) =
+      Real.log 2 * Real.logb 2 ((M : ℝ) + 2) := by
+    simp [Real.logb]
+    field_simp [ne_of_gt (Real.log_pos (by norm_num : (1 : ℝ) < 2))]
+  have hlogBound : Real.log ((M : ℝ) + 2) ≤
+      2 * firstPassageEndpointRate * (L : ℝ) := by
+    rw [hlogIdentity, firstPassageEndpointRate_eq_entropyGap_mul_logTwo]
+    have hlog2 : 0 ≤ Real.log 2 := (Real.log_pos (by norm_num)).le
+    nlinarith [mul_le_mul_of_nonneg_left hlogbBound hlog2]
+  have hswitch := shrinkingSwitchRank_lt_add_one hC M
+  have hL1 : (1 : ℝ) ≤ L := by exact_mod_cast hRank
+  have hmul := mul_le_mul_of_nonneg_left hlogBound hC
+  calc
+    (shrinkingSwitchRank C M : ℝ) ≤
+        C * Real.log ((M : ℝ) + 2) + 1 := hswitch.le
+    _ ≤ C * (2 * firstPassageEndpointRate * (L : ℝ)) + 1 := by
+      linarith
+    _ ≤ C * (2 * firstPassageEndpointRate * (L : ℝ)) + (L : ℝ) := by
+      linarith
+    _ = (2 * C * firstPassageEndpointRate + 1) * (L : ℝ) := by ring
+
 /-- The two terms in the shell bound vanish when the critical buffer tends to
 infinity and the high-rank exponent is positive. -/
 theorem tendsto_movingShellError_zero
@@ -243,9 +511,57 @@ theorem tendsto_movingShellError_zero
     tendsto_atTop_add_const_right atTop (2 : ℝ) tendsto_natCast_atTop_atTop
   have hsecond : Tendsto (fun M : ℕ => ((M : ℝ) + 2) ^ (-eps))
       atTop (nhds 0) := by
-    simpa only [Function.comp_def] using
-      (tendsto_rpow_neg_atTop heps).comp hxT
+    simpa only [Function.comp_def] using (tendsto_rpow_neg_atTop heps).comp hxT
   simpa using hfirst.add hsecond
+
+/-- The two terms in the sharp Version 4 shell profile vanish when the new
+critical buffer diverges. -/
+theorem tendsto_sharpMovingShellError_zero
+    {A : ℕ → ℝ} {eps : ℝ}
+    (hbuffer : Tendsto (sharpMovingRankBuffer A) atTop atTop)
+    (heps : 0 < eps) :
+    Tendsto
+      (fun M : ℕ =>
+        (2 : ℝ) ^ (-(sharpMovingRankBuffer A M)) +
+          (((M : ℝ) + 2) ^ (-eps)))
+      atTop (nhds 0) := by
+  have htwo : (1 : ℝ) < 2 := by norm_num
+  have hnegBuffer :
+      Tendsto (fun M : ℕ => -(sharpMovingRankBuffer A M)) atTop atBot :=
+    tendsto_neg_atBot_iff.mpr hbuffer
+  have hfirst :
+      Tendsto (fun M : ℕ => (2 : ℝ) ^ (-(sharpMovingRankBuffer A M)))
+        atTop (nhds 0) := by
+    simpa only [Function.comp_def] using
+      (tendsto_rpow_atBot_of_base_gt_one (2 : ℝ) htwo).comp hnegBuffer
+  have hxT : Tendsto (fun M : ℕ => (M : ℝ) + 2) atTop atTop :=
+    tendsto_atTop_add_const_right atTop (2 : ℝ) tendsto_natCast_atTop_atTop
+  have hsecond : Tendsto (fun M : ℕ => ((M : ℝ) + 2) ^ (-eps))
+      atTop (nhds 0) := by
+    simpa only [Function.comp_def] using (tendsto_rpow_neg_atTop heps).comp hxT
+  simpa using hfirst.add hsecond
+
+/-- The complete Version 4 shell error, including the reciprocal relative-
+height allowance, tends to zero. -/
+theorem tendsto_sharpMovingShellErrorWithHeight_zero
+    {A R : ℕ → ℝ} {C eps : ℝ}
+    (hbuffer : Tendsto (sharpMovingRankBuffer A) atTop atTop)
+    (heps : 0 < eps) (hR : Tendsto R atTop atTop) :
+    Tendsto
+      (fun M : ℕ =>
+        C * ((2 : ℝ) ^ (-(sharpMovingRankBuffer A M)) +
+          (((M : ℝ) + 2) ^ (-eps))) + 4 / R M)
+      atTop (nhds 0) := by
+  have hmain := (tendsto_const_nhds :
+      Tendsto (fun _ : ℕ => C) atTop (nhds C)).mul
+        (tendsto_sharpMovingShellError_zero hbuffer heps)
+  have hinv : Tendsto (fun M : ℕ => (R M)⁻¹) atTop (nhds 0) :=
+    tendsto_inv_atTop_zero.comp hR
+  have hheight : Tendsto (fun M : ℕ => 4 / R M) atTop (nhds 0) := by
+    simpa [div_eq_mul_inv] using
+      ((tendsto_const_nhds : Tendsto (fun _ : ℕ => (4 : ℝ)) atTop (nhds 4)).mul
+        hinv)
+  simpa using hmain.add hheight
 
 /-- A shell family with the moving endpoint error profile assembles to a
 natural-density-one set. -/
@@ -264,6 +580,24 @@ theorem naturalDensityOne_of_movingShellError
   · exact hShell
   · have hconst : Tendsto (fun _ : ℕ => C) atTop (nhds C) := tendsto_const_nhds
     simpa using hconst.mul (tendsto_movingShellError_zero hbuffer heps)
+
+/-- A shell family satisfying the complete sharp Version 4 profile assembles
+to a natural-density-one set when its relative-height allowance diverges. -/
+theorem naturalDensityOne_of_sharpMovingShellErrorWithHeight
+    (S : ℕ → Set ℕ) {A R : ℕ → ℝ} {C eps : ℝ}
+    (heps : 0 < eps)
+    (hbuffer : Tendsto (sharpMovingRankBuffer A) atTop atTop)
+    (hR : Tendsto R atTop atTop)
+    (hShell : ∀ᶠ M : ℕ in atTop,
+      shellExceptionalRatio (S M) M ≤
+        C * ((2 : ℝ) ^ (-(sharpMovingRankBuffer A M)) +
+          (((M : ℝ) + 2) ^ (-eps))) + 4 / R M) :
+    NaturalDensityOne (assembleDyadic S) := by
+  apply naturalDensityOne_assembleDyadic S
+  apply squeeze_zero'
+  · exact Eventually.of_forall fun M => shellExceptionalRatio_nonneg (S M) M
+  · exact hShell
+  · exact tendsto_sharpMovingShellErrorWithHeight_zero hbuffer heps hR
 
 end
 

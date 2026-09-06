@@ -163,6 +163,291 @@ theorem TimeoutRecertificationRun.orbit_le_start_power
         rw [hjForm, add_comm, orbit_add]
         exact hlocal.trans (htwo'.trans (houter.trans hfinal))
 
+/-- Outside the exact initial multiplicative-maximum event, the first block
+stays below `nR/2`.  The contraction condition keeps every later certified
+high block below `n`, while the low switch margin does the same for literal
+timeout blocks.  Thus the complete shortcut run retains the half-height
+slack needed for raw-map conversion. -/
+theorem TimeoutRecertificationRun.orbit_le_half_relative_height
+    {P : TimeoutHighRunData} {K₀ R : ℝ}
+    {L M S n elapsed q : ℕ}
+    (hR : 4 ≤ R)
+    (hcontract : (P.rHi : ℝ) * (1 + P.tau) ≤ 1)
+    (hLowMargin : 2 * S ≤ M)
+    (hrun : TimeoutRecertificationRun P K₀ L M S n elapsed q)
+    (hnShell : n ∈ dyadicShell M)
+    (hnMax : n ∉ shellMultiplicativeHit M (R / 4))
+    {j : ℕ} (hj : j ≤ elapsed) :
+    (orbit j n : ℝ) ≤ (n : ℝ) * R / 2 := by
+  have hn : 0 < n := by
+    have hp : 0 < 2 ^ M := by positivity
+    exact hp.trans_le (mem_dyadicShell.mp hnShell).1
+  have hnOne : (1 : ℝ) ≤ n := by exact_mod_cast hn
+  have hfirstHeight :=
+    (initial_shortcut_raw_height_of_not_mem_shellMultiplicativeHit
+      hnShell hnMax).1
+  have hlater : (n : ℝ) ≤ (n : ℝ) * R / 2 := by
+    have hn0 : (0 : ℝ) ≤ n := by positivity
+    nlinarith
+  induction hrun with
+  | first hSM hM0 hnShell' hnGood =>
+      have hstage : stageLength (timeoutHighSetup P M M) n ≤ M :=
+        stageLength_le_shell (timeoutHighSetup P M M)
+          hM0 hnShell' hnGood
+      exact (hfirstHeight j (hj.trans hstage)).le
+  | @nextHi elapsed qPrev m hrun hSm hm0 hmPrev hsourceShell hsourceGood
+      hgap ih =>
+      by_cases hjPrev : j ≤ elapsed
+      · exact ih hjPrev
+      · let v := j - elapsed
+        have hjForm : j = elapsed + v := by dsimp [v]; omega
+        have hv : v ≤ stageLength (timeoutHighSetup P M m)
+            (orbit elapsed n) := by dsimp [v]; omega
+        have hx : 0 < orbit elapsed n := orbit_pos hn elapsed
+        have hxW : orbit elapsed n ∈ extendedWindow (timeoutHighSetup P M m) :=
+          initialWindowGood_subset_extendedWindow _ hsourceGood
+        have hlocal := orbit_le_one_add_eta_of_le_stageLength
+          (timeoutHighSetup P M m) hx hxW hv
+        have hqPrevInitial : qPrev ≤ rationalTargetRank P.rHi M :=
+          hrun.currentRank_le_initialRank
+        have hmInitial : m + 1 ≤ rationalTargetRank P.rHi M := by
+          simpa [hmPrev] using hqPrevInitial
+        have hxUpperNat : orbit elapsed n ≤
+            2 ^ rationalTargetRank P.rHi M := by
+          exact (mem_dyadicShell.mp hsourceShell).2.le.trans
+            (Nat.pow_le_pow_right (by omega) hmInitial)
+        have hxUpper : (orbit elapsed n : ℝ) ≤
+            (2 : ℝ) ^ rationalTargetRank P.rHi M := by
+          exact_mod_cast hxUpperNat
+        have htau0 : 0 ≤ 1 + P.tau := by linarith [P.pHi.eta_pos]
+        have htol : timeoutHighTolerance P M m ≤ P.tau :=
+          timeoutHighTolerance_le_tau P M m
+        have hlocalTau : (orbit elapsed n : ℝ) ^
+            (1 + timeoutHighTolerance P M m) ≤
+              (orbit elapsed n : ℝ) ^ (1 + P.tau) :=
+          Real.rpow_le_rpow_of_exponent_le
+            (by exact_mod_cast (show 1 ≤ orbit elapsed n by omega))
+            (by linarith)
+        have hsourcePow : (orbit elapsed n : ℝ) ^ (1 + P.tau) ≤
+            ((2 : ℝ) ^ rationalTargetRank P.rHi M) ^ (1 + P.tau) :=
+          Real.rpow_le_rpow (by positivity) hxUpper htau0
+        have hr0 : (0 : ℝ) ≤ (P.rHi : ℝ) := P.pHi.r_pos.le
+        have hqInitial : (rationalTargetRank P.rHi M : ℝ) ≤
+            (P.rHi : ℝ) * (M : ℝ) := by
+          exact Nat.floor_le (mul_nonneg hr0 (Nat.cast_nonneg M))
+        have hExp : (rationalTargetRank P.rHi M : ℝ) *
+            (1 + P.tau) ≤ (M : ℝ) := by
+          have hmul := mul_le_mul_of_nonneg_right hqInitial htau0
+          have hcontractM := mul_le_mul_of_nonneg_right hcontract
+            (Nat.cast_nonneg M)
+          nlinarith
+        have htwo : ((2 : ℝ) ^ rationalTargetRank P.rHi M) ^
+            (1 + P.tau) ≤ (2 : ℝ) ^ M := by
+          rw [← Real.rpow_natCast, ← Real.rpow_mul (by norm_num),
+            ← Real.rpow_natCast]
+          exact Real.rpow_le_rpow_of_exponent_le (by norm_num) hExp
+        have hnLower : (2 : ℝ) ^ M ≤ (n : ℝ) := by
+          exact_mod_cast (mem_dyadicShell.mp hnShell).1
+        rw [hjForm, add_comm, orbit_add]
+        exact hlocal.trans (hlocalTau.trans
+          (hsourcePow.trans (htwo.trans (hnLower.trans hlater))))
+  | @nextLo elapsed qPrev m hrun hmS hLm hmPrevLo hmPrevHi hsourceShell
+      hpass hqpos hqparent hgap ih =>
+      by_cases hjPrev : j ≤ elapsed
+      · exact ih hjPrev
+      · let v := j - elapsed
+        have hjForm : j = elapsed + v := by dsimp [v]; omega
+        have hv : v ≤ hpass.duration := by dsimp [v]; omega
+        have hvm : v ≤ m := hv.trans hpass.duration_le
+        have hmSle : m + 1 ≤ S := by omega
+        have hpowv : 2 ^ v ≤ 2 ^ S :=
+          Nat.pow_le_pow_right (by omega) (hvm.trans (by omega))
+        have hxS : orbit elapsed n ≤ 2 ^ S :=
+          (mem_dyadicShell.mp hsourceShell).2.le.trans
+            (Nat.pow_le_pow_right (by omega) hmSle)
+        have hlocalNat : orbit v (orbit elapsed n) ≤ (2 ^ S) ^ 2 := by
+          calc
+            orbit v (orbit elapsed n) ≤ 2 ^ v * orbit elapsed n :=
+              orbit_le_two_pow_mul _ _
+            _ ≤ 2 ^ S * 2 ^ S := Nat.mul_le_mul hpowv hxS
+            _ = (2 ^ S) ^ 2 := by ring
+        have hSMpow : (2 ^ S) ^ 2 ≤ 2 ^ M := by
+          rw [← pow_mul]
+          exact Nat.pow_le_pow_right (by omega) (by omega)
+        have hnLowerNat : 2 ^ M ≤ n := (mem_dyadicShell.mp hnShell).1
+        have hlocalToN : orbit v (orbit elapsed n) ≤ n :=
+          hlocalNat.trans (hSMpow.trans hnLowerNat)
+        have hlocalToNReal : (orbit v (orbit elapsed n) : ℝ) ≤ n := by
+          exact_mod_cast hlocalToN
+        rw [hjForm, add_comm, orbit_add]
+        exact hlocalToNReal.trans hlater
+
+/-- The preceding shortcut estimate and the exact raw/shortcut interleaving
+give both relative-height ceilings through the same timeout-run endpoint. -/
+theorem TimeoutRecertificationRun.shortcut_raw_le_relative_height
+    {P : TimeoutHighRunData} {K₀ R : ℝ}
+    {L M S n elapsed q : ℕ}
+    (hR : 4 ≤ R)
+    (hcontract : (P.rHi : ℝ) * (1 + P.tau) ≤ 1)
+    (hLowMargin : 2 * S ≤ M)
+    (hrun : TimeoutRecertificationRun P K₀ L M S n elapsed q)
+    (hnShell : n ∈ dyadicShell M)
+    (hnMax : n ∉ shellMultiplicativeHit M (R / 4)) :
+    (∀ j : ℕ, j ≤ elapsed →
+        (orbit j n : ℝ) ≤ (n : ℝ) * R / 2) ∧
+      (∀ i : ℕ, i ≤ rawTime n elapsed →
+        (rawOrbit i n : ℝ) ≤ (n : ℝ) * R) := by
+  have hshortcut : ∀ j : ℕ, j ≤ elapsed →
+      (orbit j n : ℝ) ≤ (n : ℝ) * R / 2 :=
+    fun j hj => hrun.orbit_le_half_relative_height hR hcontract
+      hLowMargin hnShell hnMax hj
+  refine ⟨hshortcut, ?_⟩
+  intro i hi
+  have hraw := rawOrbit_le_two_mul_of_shortcut_prefix_le hshortcut i hi
+  convert hraw using 1 <;> ring
+
+/-- Uniform two-sided drift estimate for the elapsed time of every timeout
+run whose terminal rank is below the logarithmic switch.  This is the
+centered-clock form of the same potential estimate used to count feasible
+times. -/
+theorem eventually_timeoutRun_elapsed_centered
+    (P : TimeoutHighRunData) {K₀ C : ℝ} (hC : 0 ≤ C) :
+    ∀ᶠ M : ℕ in atTop, ∀ {L n elapsed q : ℕ},
+      q ≤ shrinkingSwitchRank C M →
+      TimeoutRecertificationRun P K₀ L M
+        (shrinkingSwitchRank C M) n elapsed q →
+      |driftGap * (elapsed : ℝ) - (M : ℝ)| ≤
+        timeoutTimeSupportConstant P C *
+          Real.sqrt (((M : ℝ) + 2) * Real.log ((M : ℝ) + 2)) := by
+  have hPotential := eventually_timeoutTimePotential_source_le_sqrt P hC
+  have hSwitch := eventually_shrinkingSwitchRank_lt_source hC
+  filter_upwards [hPotential, hSwitch, eventually_ge_atTop (1 : ℕ)]
+    with M hPotential hSwitch hM
+  intro L n elapsed q hqS hrun
+  let S := shrinkingSwitchRank C M
+  let sourcePotential := timeoutTimePotential P M S (M + 1)
+  let root := Real.sqrt (((M : ℝ) + 2) * Real.log ((M : ℝ) + 2))
+  have hdev := hrun.deviation_add_potential_le hM
+  have hpotq0 := timeoutTimePotential_nonneg P M S q
+  have hlocal :
+      |driftGap * (elapsed : ℝ) -
+          (((M + 1 : ℕ) : ℝ) - (q : ℝ))| ≤ sourcePotential := by
+    dsimp [sourcePotential, S]
+    linarith
+  have hshift :
+      |(((M + 1 : ℕ) : ℝ) - (q : ℝ)) - (M : ℝ)| ≤ (q : ℝ) + 1 := by
+    have hq0 : (0 : ℝ) ≤ (q : ℝ) := Nat.cast_nonneg q
+    push_cast
+    rw [abs_le]
+    constructor <;> linarith
+  have hSsq : (S : ℝ) ≤ (S : ℝ) ^ 2 := by
+    by_cases hS0 : S = 0
+    · simp [hS0]
+    · have hS1 : (1 : ℝ) ≤ (S : ℝ) := by
+        exact_mod_cast (Nat.one_le_iff_ne_zero.mpr hS0)
+      nlinarith [sq_nonneg ((S : ℝ) - 1)]
+  have hqR : (q : ℝ) ≤ (S : ℝ) := by
+    exact_mod_cast hqS
+  have hreserve : (S : ℝ) ^ 2 ≤ sourcePotential := by
+    dsimp [sourcePotential, S]
+    exact timeout_switch_sq_le_source_potential P (by omega)
+  have hcenter :
+      |driftGap * (elapsed : ℝ) - (M : ℝ)| ≤
+        2 * sourcePotential + 1 := by
+    calc
+      |driftGap * (elapsed : ℝ) - (M : ℝ)| =
+          |(driftGap * (elapsed : ℝ) -
+              (((M + 1 : ℕ) : ℝ) - (q : ℝ))) +
+            ((((M + 1 : ℕ) : ℝ) - (q : ℝ)) - (M : ℝ))| := by ring
+      _ ≤ |driftGap * (elapsed : ℝ) -
+              (((M + 1 : ℕ) : ℝ) - (q : ℝ))| +
+            |(((M + 1 : ℕ) : ℝ) - (q : ℝ)) - (M : ℝ)| := abs_add_le _ _
+      _ ≤ sourcePotential + ((q : ℝ) + 1) := add_le_add hlocal hshift
+      _ ≤ 2 * sourcePotential + 1 := by nlinarith
+  have hpot0 : 0 ≤ sourcePotential := by
+    dsimp [sourcePotential, S]
+    exact timeoutTimePotential_nonneg P M (shrinkingSwitchRank C M) (M + 1)
+  have hgap_le_one : driftGap ≤ 1 := by
+    linarith [driftGap_lt_a0, a0_lt_one]
+  have hscaled : 2 * sourcePotential ≤ 2 * sourcePotential / driftGap := by
+    rw [le_div_iff₀ driftGap_pos]
+    nlinarith
+  calc
+    |driftGap * (elapsed : ℝ) - (M : ℝ)| ≤
+        2 * sourcePotential + 1 := hcenter
+    _ ≤ 1 + 2 * sourcePotential / driftGap := by linarith
+    _ ≤ timeoutTimeSupportConstant P C * root := by
+      simpa [sourcePotential, S, root, div_eq_mul_inv, mul_assoc] using hPotential
+
+/-- The same centered estimate after completing a dyadic terminal endpoint by
+exact halving.  When `q ≤ L` the completion length `q - L` is zero. -/
+theorem eventually_timeoutRun_completed_centered
+    (P : TimeoutHighRunData) {K₀ C : ℝ} (hC : 0 ≤ C) :
+    ∀ᶠ M : ℕ in atTop, ∀ {L n elapsed q : ℕ},
+      q ≤ shrinkingSwitchRank C M →
+      TimeoutRecertificationRun P K₀ L M
+        (shrinkingSwitchRank C M) n elapsed q →
+      |driftGap * ((elapsed + (q - L) : ℕ) : ℝ) - (M : ℝ)| ≤
+        2 * timeoutTimeSupportConstant P C *
+          Real.sqrt (((M : ℝ) + 2) * Real.log ((M : ℝ) + 2)) := by
+  have hElapsed := eventually_timeoutRun_elapsed_centered (K₀ := K₀) P hC
+  have hPotential := eventually_timeoutTimePotential_source_le_sqrt P hC
+  have hSwitch := eventually_shrinkingSwitchRank_lt_source hC
+  filter_upwards [hElapsed, hPotential, hSwitch, eventually_ge_atTop (1 : ℕ)]
+    with M hElapsed hPotential hSwitch hM
+  intro L n elapsed q hqS hrun
+  let S := shrinkingSwitchRank C M
+  let sourcePotential := timeoutTimePotential P M S (M + 1)
+  let root := Real.sqrt (((M : ℝ) + 2) * Real.log ((M : ℝ) + 2))
+  have hElapsed' := hElapsed hqS hrun
+  have hSsq : (S : ℝ) ≤ (S : ℝ) ^ 2 := by
+    by_cases hS0 : S = 0
+    · simp [hS0]
+    · have hS1 : (1 : ℝ) ≤ (S : ℝ) := by
+        exact_mod_cast (Nat.one_le_iff_ne_zero.mpr hS0)
+      nlinarith [sq_nonneg ((S : ℝ) - 1)]
+  have hreserve : (S : ℝ) ^ 2 ≤ sourcePotential := by
+    dsimp [sourcePotential, S]
+    exact timeout_switch_sq_le_source_potential P (by omega)
+  have hvS : q - L ≤ S := (Nat.sub_le q L).trans hqS
+  have hvR : ((q - L : ℕ) : ℝ) ≤ sourcePotential := by
+    have hvSR : ((q - L : ℕ) : ℝ) ≤ (S : ℝ) := by exact_mod_cast hvS
+    exact hvSR.trans (hSsq.trans hreserve)
+  have hpot0 : 0 ≤ sourcePotential := by
+    dsimp [sourcePotential, S]
+    exact timeoutTimePotential_nonneg P M (shrinkingSwitchRank C M) (M + 1)
+  have hgap_le_one : driftGap ≤ 1 := by
+    linarith [driftGap_lt_a0, a0_lt_one]
+  have hextra : driftGap * ((q - L : ℕ) : ℝ) ≤
+      timeoutTimeSupportConstant P C * root := by
+    have hgap0 : 0 ≤ driftGap := driftGap_pos.le
+    have hfirst : driftGap * ((q - L : ℕ) : ℝ) ≤ sourcePotential := by
+      calc
+        driftGap * ((q - L : ℕ) : ℝ) ≤ 1 * ((q - L : ℕ) : ℝ) := by
+          gcongr
+        _ ≤ sourcePotential := by simpa using hvR
+    have hscaled : sourcePotential ≤ 2 * sourcePotential / driftGap := by
+      rw [le_div_iff₀ driftGap_pos]
+      nlinarith
+    calc
+      driftGap * ((q - L : ℕ) : ℝ) ≤ sourcePotential := hfirst
+      _ ≤ 1 + 2 * sourcePotential / driftGap := by linarith
+      _ ≤ timeoutTimeSupportConstant P C * root := by
+        simpa [sourcePotential, S, root, div_eq_mul_inv, mul_assoc] using hPotential
+  calc
+    |driftGap * ((elapsed + (q - L) : ℕ) : ℝ) - (M : ℝ)| =
+        |(driftGap * (elapsed : ℝ) - (M : ℝ)) +
+          driftGap * ((q - L : ℕ) : ℝ)| := by push_cast; ring
+    _ ≤ |driftGap * (elapsed : ℝ) - (M : ℝ)| +
+          |driftGap * ((q - L : ℕ) : ℝ)| := abs_add_le _ _
+    _ = |driftGap * (elapsed : ℝ) - (M : ℝ)| +
+          driftGap * ((q - L : ℕ) : ℝ) := by
+      rw [abs_of_nonneg (mul_nonneg driftGap_pos.le (Nat.cast_nonneg _))]
+    _ ≤ timeoutTimeSupportConstant P C * root +
+          timeoutTimeSupportConstant P C * root :=
+      add_le_add hElapsed' hextra
+    _ = 2 * timeoutTimeSupportConstant P C * root := by ring
+
 /-- The timeout clock leaves enough of the strict clock margin to pay every
 possible exact-halving completion below the logarithmic switch. -/
 theorem eventually_timeoutRun_elapsed_add_switch_lt_shellClock
@@ -296,7 +581,8 @@ theorem eventually_timeoutRun_elapsed_add_switch_lt_shellClock
   calc
     (elapsed : ℝ) + (shrinkingSwitchRank P.Cswitch M : ℝ) ≤
         ((M : ℝ) / driftGap + (1 / driftGap + T * root)) +
-          (shrinkingSwitchRank P.Cswitch M : ℝ) := by gcongr
+          (shrinkingSwitchRank P.Cswitch M : ℝ) :=
+      add_le_add htime (le_refl _)
     _ < (M : ℝ) / driftGap + margin * (M : ℝ) := by linarith
     _ = c * (M : ℝ) * Real.log 2 := by
       dsimp [margin]

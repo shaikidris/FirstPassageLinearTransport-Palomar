@@ -25,8 +25,8 @@ repository:
   role: "substantive-development"
 
 classification:
-  arxiv: ["math.NT", "math.LO"]
-  msc2020: ["11B83", "37P99", "03B35"]
+  arxiv: ["math.NT"]
+  msc2020: ["11B83", "37P99"]
 
 sources:
   - title: "Polylogarithmic Descent for Almost All Collatz Orbits in Natural Density"

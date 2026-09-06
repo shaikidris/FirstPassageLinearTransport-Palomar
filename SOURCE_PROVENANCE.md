@@ -13,12 +13,15 @@ metadata were removed.
 The four selected declarations correspond to the Version 4 manuscript of
 [*Polylogarithmic Descent for Almost All Collatz Orbits in Natural
 Density*](https://doi.org/10.2139/ssrn.7290240). The persistent SSRN DOI is the
-primary citation record. Zenodo DOI `10.5281/zenodo.22130385` is the preceding
-immutable Version 3.2.4 manuscript, not evidence for the Version 4 additions.
+primary citation record and was revised to Version 4 on 6 September 2026.
+Zenodo DOI `10.5281/zenodo.22525724` is the immutable Version 4 manuscript.
+Zenodo DOI `10.5281/zenodo.22130385` remains the preceding immutable Version
+3.2.4 manuscript and is not evidence for the Version 4 additions.
 
-The Palomar submission is release-gated on the Version 4 manuscript becoming
-public at the persistent preprint record. A new immutable Zenodo version and
-its exact identifier will be added only after that deposit exists.
+The corresponding immutable Version 4 Lean archive is Zenodo DOI
+`10.5281/zenodo.22525757`. The canonical source release is tag
+`lean-v4.0.0`, commit `a419e012be2aeb735387385a711c211651ccf527`, in
+`shaikidris/FirstPassageLinearTransport`.
 
 ## Preceding frozen source
 
@@ -49,9 +52,13 @@ relative-height additions selected here.
 | Preceding source Mathlib | `leanprover-community/mathlib4` | `9837ca9d65d9de6fad1ef4381750ca688774e608` |
 | Preceding registered Palomar source | `shaikidris/FirstPassageLinearTransport-Palomar` | `68d0ab1454968a75c90b1423439477f456225713` |
 | Version 4 substantive proof-cone checkpoint | `shaikidris/FirstPassageLinearTransport-Palomar` | `a72e440e4e862724e027b6101c0ec5e0958597f1` |
+| Canonical Version 4 source release | `shaikidris/FirstPassageLinearTransport` | `a419e012be2aeb735387385a711c211651ccf527` |
+| Version 4 Mathlib dependency pin | `leanprover-community/mathlib4` | `db584cd6d46c92f209a44c0f1c829460d327499d` |
 
-The Version 4 candidate commit and release tag will be added only after the
-candidate snapshot is committed and approved for publication.
+The exact Palomar submission snapshot is recorded out of band by the registry;
+it is not written into its own commit. The registry-facing package was ported
+from the canonical Version 4 release and retains its own immutable commit
+history.
 
 ## Version 4 proof development
 
@@ -114,5 +121,6 @@ local full build and a fresh independent Comparator/Landrun/NanoDa replay. No
 earlier Palomar review is treated as verification of the Version 4 additions.
 
 This provenance record does not claim that the strengthened candidate has
-already been published, registered, reviewed by a person, or accepted by a
-journal.
+already been registered by Palomar, reviewed by a person, or accepted by a
+journal. The public preprint and software deposits are archival records, not
+peer review or registry verification.

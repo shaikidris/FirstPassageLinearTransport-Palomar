@@ -39,46 +39,48 @@ sources:
       the Version 4 manuscript: Corollary 1.2(4), Proposition 6.5 and
       Corollary 6.6; Corollary 1.2(1); Proposition 8.1 and its joint-sharpness
       consequence; and the selected strict-rate projection of Theorem 1.3 and
-      Corollary 1.4. The Palomar submission is release-gated on the Version 4
-      revision being public at this record. The manuscript proof remains
-      self-contained; this package supplies supplementary kernel verification.
+      Corollary 1.4. The public record was revised to Version 4 on 6 September
+      2026. The manuscript proof remains self-contained; this package supplies
+      supplementary kernel verification.
     license: "CC-BY-4.0"
     author_endorsement: "participated"
   - title: "Polylogarithmic Descent for Almost All Collatz Orbits in Natural Density"
     authors:
       - "Idris Ali Shaik"
-    id: "doi:10.5281/zenodo.22130385"
+    id: "doi:10.5281/zenodo.22525724"
     type: "paper"
-    location: "https://doi.org/10.5281/zenodo.22130385"
+    location: "https://doi.org/10.5281/zenodo.22525724"
     relationship: "other"
     note: >-
-      Immutable Version 3.2.4 manuscript archive preceding the Version 4
-      strengthening. It is retained for provenance and must not be described
-      as containing the four strengthened Version 4 statements.
+      Immutable Version 4 manuscript archive containing the four strengthened
+      statements selected here. This is a second archival manifestation of
+      the same paper cited through its persistent SSRN DOI above.
     license: "CC-BY-4.0"
     author_endorsement: "participated"
   - title: "Lean 4 Formalization: Polylogarithmic Descent for Almost All Collatz Orbits in Natural Density"
     authors:
       - "Idris Ali Shaik"
-    id: "doi:10.5281/zenodo.21930432"
+    id: "doi:10.5281/zenodo.22525757"
     type: "other"
-    location: "https://doi.org/10.5281/zenodo.21930432"
+    location: "https://doi.org/10.5281/zenodo.22525757"
     relationship: "other"
     note: >-
-      Earlier frozen Lean release, tag lean-v3.2.0 and commit
-      ef3410843bf58d69f771f5ba2c0571d54b54da59. It predates the Version 4
-      ballot, centered-clock, joint-lower-bound, and relative-height additions.
+      Immutable archive of the canonical Version 4 Lean release, tag
+      lean-v4.0.0 and commit
+      a419e012be2aeb735387385a711c211651ccf527. The Palomar package is a
+      Lean 4.33.0 registry-facing port of this checked theorem surface.
     license: "Apache-2.0"
     author_endorsement: "participated"
 
 related_formalizations:
-  - id: "https://github.com/shaikidris/FirstPassageLinearTransport-Palomar/tree/a72e440e4e862724e027b6101c0ec5e0958597f1"
+  - id: "https://github.com/shaikidris/FirstPassageLinearTransport/tree/a419e012be2aeb735387385a711c211651ccf527"
     relationship: "builds-on"
     note: >-
       This repository and commit are the authoritative substantive source for
-      the Version 4 proof-cone checkpoint. The later submission commit adds the
+      the canonical Version 4 release. This registry-facing repository contains
+      the substantive selected proof cone ported to Lean 4.33.0 and adds the
       synchronized Challenge, SolutionV4, Comparator, audit, and metadata
-      surface and removes modules unreachable from the selected roots.
+      surface.
   - id: "https://palomar-registry.org/entry?id=PALOMAR-2026-08-26-000005&version=3"
     relationship: "builds-on"
     note: >-
@@ -87,13 +89,6 @@ related_formalizations:
       68d0ab1454968a75c90b1423439477f456225713. This candidate replaces that
       selected surface with four stronger Version 4 declarations and requires
       a fresh Comparator, NanoDa, and editorial replay before registration.
-  - id: "https://github.com/shaikidris/FirstPassageLinearTransport/tree/ef3410843bf58d69f771f5ba2c0571d54b54da59"
-    relationship: "builds-on"
-    note: >-
-      Public Lean 4.15.0 release underlying the preceding proof cone. The
-      Version 4 candidate extends that cone with the finite-ballot endpoint,
-      centered-clock, first-passage, joint-obstruction, and stretched-height
-      developments and ports the selected package to Lean 4.33.0.
 
 status:
   scope: >-

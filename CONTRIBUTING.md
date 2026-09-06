@@ -1,21 +1,21 @@
 # Contributing
 
-This repository is a preservation-oriented Palomar package for a frozen
-mathematical result. Contributions that improve compatibility, documentation,
+This repository is a preservation-oriented Palomar package for selected
+mathematical results. Contributions that improve compatibility, documentation,
 or verification are welcome. A change to the mathematical statement or proof
 architecture must be proposed separately and must not be presented as a
-mechanical port of `lean-v3.2.0`.
+mechanical port of an earlier release.
 
 Before opening a pull request:
 
 1. Keep `Challenge.lean` a small Mathlib-only statement surface with exactly
-   one deliberate `sorry`.
-2. Keep the corresponding completed proof in `Solution.lean` and update
+   four deliberate `sorry`s, one for each selected declaration.
+2. Keep the corresponding completed proof in `SolutionV4.lean` and update
    `comparator.json` if the advertised declaration surface changes.
 3. Record any source-fidelity or toolchain change in `SOURCE_PROVENANCE.md` and
    `formalization.yaml`.
 4. Do not add legacy, alternate, manuscript, generated, or unrelated modules to
-   the fixed-theorem dependency cone.
+   the selected four-theorem dependency cone.
 5. Run:
 
    ```bash

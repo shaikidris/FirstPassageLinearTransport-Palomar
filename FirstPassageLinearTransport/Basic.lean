@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Idris Ali Shaik
 -/
 import Mathlib.Analysis.SpecialFunctions.Pow.Real
-import Mathlib.Data.Nat.Lattice
+import Mathlib.Order.Lattice.Nat
 import Mathlib.Logic.Function.Iterate
 import Mathlib.Order.Interval.Finset.Nat
 import Mathlib.Topology.Instances.Nat
